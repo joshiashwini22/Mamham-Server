@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.models import User
+from authentication.models import Customer, Address
+
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -19,3 +21,19 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'password')
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = '__all__'
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    phoneNumber = serializers.CharField()
+    address = AddressSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Customer
+        fields = ('user', 'phoneNumber', 'address')

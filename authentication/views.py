@@ -7,21 +7,24 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-from authentication.serializers import UserSerializer
+from authentication.serializers import UserSerializer, CustomerSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-
 
 
 # Create your views here.
 class RegisterUser(APIView):
     def post(self, request, format='json'):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            if user:
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        userSerializer = UserSerializer(data=request.data)
+        userSerializer.is_valid(raise_exception=True)
+        user_obj = userSerializer.save()
+        customerSerializer = CustomerSerializer(data={
+            **request.data,
+            "user": user_obj.id
+        })
+        customerSerializer.is_valid(raise_exception=True)
+        customer_obj = customerSerializer.save()
+        return Response(userSerializer.data, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
