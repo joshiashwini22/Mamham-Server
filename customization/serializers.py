@@ -1,22 +1,22 @@
 from rest_framework import serializers
-from .models import CustomOrder, OrderList, Dish
+from .models import CustomOrder, DishList, Dish
 
 
-class OrderListSerializer(serializers.ModelSerializer):
+class DishListSerializer(serializers.ModelSerializer):
     class Meta:
-        model = OrderList
-        fields = ('id', 'CustomOrderID', 'DishID', 'Quantity', 'ItemPrice')
+        model = DishList
+        fields = '__all__'
 
 
 class CustomOrderSerializer(serializers.ModelSerializer):
-    details = OrderListSerializer(many=True, read_only=True)
+    details = DishListSerializer(many=True, read_only=True)
 
     class Meta:
         model = CustomOrder
-        fields = ('id', 'CustomerID', 'OrderDate', 'DeliveryTime', 'DeliveryAddress', 'Total', 'details')
+        fields = '__all__'
 
 
 class DishSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dish
-        fields = ('id', 'Name', 'Description', 'Price', 'Category', 'Image')
+        fields = '__all__'

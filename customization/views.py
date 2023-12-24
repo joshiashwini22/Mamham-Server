@@ -1,38 +1,19 @@
+from rest_framework import viewsets
 
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Dish
-from .forms import DishForm
+from .models import CustomOrder, DishList, Dish
+from customization.serializers import CustomOrderSerializer, DishListSerializer, DishSerializer
 
-def dish_list(request):
-    dishes = Dish.objects.all()
-    return render(request, 'customization/dish_list.html', {'dishes': dishes})
 
-def dish_detail(request, pk):
-    dish = get_object_or_404(Dish, pk=pk)
-    return render(request, 'customization/dish_detail.html', {'dish': dish})
+class CustomOrderViewSet(viewsets.ModelViewSet):
+    queryset = CustomOrder.objects.all()
+    serializer_class = CustomOrderSerializer
 
-def dish_create(request):
-    if request.method == 'POST':
-        form = DishForm(request.POST)
-        if form.is_valid():
-            model = form.save()
-            return redirect('dish_detail', pk=model.pk)
-    else:
-        form = DishForm()
-    return render(request, 'customization/dish_form.html', {'form': form})
 
-def dish_edit(request, pk):
-    dish = get_object_or_404(Dish, pk=pk)
-    if request.method == 'POST':
-        form = DishForm(request.POST, instance=dish)
-        if form.is_valid():
-            dish = form.save()
-            return redirect('model_detail', pk=dish.pk)
-    else:
-        form = DishForm(instance=dish)
-    return render(request, 'customization/dish_form.html', {'form': form})
+class DishListViewSet(viewsets.ModelViewSet):
+    queryset = DishList.objects.all()
+    serializer_class = DishListSerializer
 
-def dish_delete(request, pk):
-    dish = get_object_or_404(Dish, pk=pk)
-    dish.delete()
-    return redirect('dish_list')
+
+class DishViewSet(viewsets.ModelViewSet):
+    queryset = Dish.objects.all()
+    serializer_class = DishSerializer

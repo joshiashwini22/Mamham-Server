@@ -2,17 +2,24 @@ import datetime
 
 from django.shortcuts import render
 from rest_framework.views import APIView
+from rest_framework import viewsets
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-from authentication.serializers import UserSerializer, CustomerSerializer
+from authentication.serializers import UserSerializer, CustomerSerializer, AddressSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from authentication.models import Customer, Address
 
 
 # Create your views here.
+class CustomerViewSet(viewsets.ModelViewSet):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+
+
 class RegisterUser(APIView):
     def post(self, request, format='json'):
         userSerializer = UserSerializer(data=request.data)

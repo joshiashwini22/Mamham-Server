@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from authentication.models import Customer, Address
 
 
-
 class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,
@@ -14,13 +13,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     username = serializers.CharField(max_length=255, validators=[UniqueValidator(queryset=User.objects.all())])
 
-    # def create(self, validated_data):
-    #     user = User.objects.create_user(validated_data['username'], validated_data['email'], validated_data['password'])
-    #     return user
-
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password')
+        fields = ('id', 'username', 'email', 'password', 'is_staff')
 
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -30,10 +25,8 @@ class AddressSerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-    phoneNumber = serializers.CharField()
-    address = AddressSerializer(many=True, read_only=True)
+    address = AddressSerializer(many=True, required=False, read_only=True)
 
     class Meta:
         model = Customer
-        fields = ('user', 'phoneNumber', 'address')
+        fields = ('user', 'address', 'first_name', 'last_name', 'phone_number')

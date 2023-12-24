@@ -7,7 +7,7 @@ class CustomOrder(models.Model):
     status_choices = (
         ("Pending", 'Pending'),
         ("Approved", 'Approved'),
-        ("Getting Ready", 'Getting Ready'),
+        ("Preparing", 'Preparing'),
         ("On the Way", 'On the Way'),
         ("Completed", 'Completed')
     )
@@ -22,15 +22,32 @@ class CustomOrder(models.Model):
         verbose_name = "Custom Order"
         verbose_name_plural = "Custom Orders"
 
+    def __str__(self):
+        return self.id
+
 
 class Dish(models.Model):
     name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField()
+    image = models.ImageField(upload_to="static/images")
     description = models.TextField()
+
+    class Meta:
+        verbose_name = "Dish"
+        verbose_name_plural = "Dishes"
+
+    def __str__(self):
+        return self.name
 
 
 class DishList(models.Model):
     customer = models.ForeignKey(CustomOrder, null=True, on_delete=models.CASCADE)
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
     quantity = models.IntegerField()
+
+    class Meta:
+        verbose_name = "Dish List"
+        verbose_name_plural = "Dish Lists"
+
+    def __str__(self):
+        return self.id

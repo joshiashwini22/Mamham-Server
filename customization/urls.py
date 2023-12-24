@@ -1,11 +1,12 @@
-# urls.py
-from django.urls import path
-from .views import dish_list, dish_detail, dish_create, dish_edit, dish_delete
+from django.urls import path, include
+from customization.views import CustomOrderViewSet, DishListViewSet, DishViewSet
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'custom-order', CustomOrderViewSet, basename='custom order')
+router.register(r'dish-list', DishListViewSet, basename='dish list')
+router.register(r'dishes', DishViewSet, basename='dishes')
 
 urlpatterns = [
-    path('dish/', dish_list, name='dish_list'),
-    path('dish/<int:pk>/', dish_detail, name='dish_detail'),
-    path('dish/new/', dish_create, name='dish_create'),
-    path('dish/<int:pk>/edit/', dish_edit, name='dish_edit'),
-    path('dish/<int:pk>/delete/', dish_delete, name='dish_delete'),
+    path('', include(router.urls))
 ]
