@@ -10,7 +10,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from authentication.serializers import UserSerializer, CustomerSerializer, AddressSerializer
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, logout
 from authentication.models import Customer, Address
 
 
@@ -65,3 +65,13 @@ def login(request: Request):
         'access': str(token.access_token),
         'refresh': str(token)
     }}, status=200)
+
+
+class LogoutView(APIView):
+    def post(self, request):
+        user = request.user
+        if user.is_authenticated:
+            logout(request)
+            return Response({'message': 'Logged out successfully'}, status=status.HTTP_205_RESET_CONTENT)
+        else:
+            return Response({'message': 'User is not authenticated'}, status=status.HTTP_400_BAD_REQUEST)

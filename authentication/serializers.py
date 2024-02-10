@@ -17,6 +17,9 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email', 'password', 'is_staff')
 
+    def create(self, validated_data):
+        return User.objects.create_user(**validated_data)
+
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
