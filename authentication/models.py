@@ -22,9 +22,9 @@ class Address(models.Model):
     address_line1 = models.CharField(max_length=100)
     address_line2 = models.CharField(max_length=100)
     city = models.CharField(max_length=100)
-    latitude = models.IntegerField()
-    longitude = models.IntegerField()
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    latitude = models.FloatField()  # Changed from IntegerField
+    longitude = models.FloatField()  # Changed from IntegerField
+    customer = models.ForeignKey(Customer, related_name='addresses', on_delete=models.CASCADE)
 
 
 class Payment(models.Model):

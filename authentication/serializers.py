@@ -28,8 +28,9 @@ class AddressSerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
-    address = AddressSerializer(many=True, required=False, read_only=True)
+    user = UserSerializer()
+    addresses = AddressSerializer(many=True)  # Nested serializer for addresses
 
     class Meta:
         model = Customer
-        fields = ('user', 'address', 'first_name', 'last_name', 'phone_number')
+        fields = ('user', 'addresses', 'first_name', 'last_name', 'phone_number')

@@ -14,6 +14,7 @@ from django.contrib.auth import authenticate, logout
 from authentication.models import Customer, Address
 
 
+
 # Create your views here.
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
@@ -61,9 +62,17 @@ def login(request: Request):
     user.lastLogin = datetime.datetime.now()
     user.save()
     token = TokenObtainPairSerializer.get_token(user)
+    if user.is_staff:
+        serialized_user = UserSerializer(user).data
+    else:
+        customer = Customer.objects.get(user=user)
+        serialized_user = CustomerSerializer(customer).data
+
     return Response({'message': 'Log in successful', 'token': {
         'access': str(token.access_token),
-        'refresh': str(token)
+        'refresh': str(token),
+        'user': serialized_user
+
     }}, status=200)
 
 

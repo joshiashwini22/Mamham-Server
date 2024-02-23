@@ -27,10 +27,19 @@ class CustomOrder(models.Model):
 
 
 class Dish(models.Model):
+    category_choices = (
+        ("Base", 'Base'),
+        ("Lentil", 'Lentil'),
+        ("Veggie", 'Veggie'),
+        ("Protein", 'Protein'),
+        ("Pickle", 'Pickle')
+    )
     name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to="static/images")
+    image = models.ImageField(upload_to="dish_images", blank=True, null=True)
     description = models.TextField()
+    category = models.CharField(max_length=20, choices=category_choices, default='Base')
+    portion = models.DecimalField(max_digits=5, decimal_places=2)
 
     class Meta:
         verbose_name = "Dish"

@@ -3,6 +3,7 @@ from .models import CustomOrder, DishList, Dish
 
 
 class DishListSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(required=False)
     class Meta:
         model = DishList
         fields = '__all__'
