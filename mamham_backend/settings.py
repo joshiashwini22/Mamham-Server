@@ -59,6 +59,11 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
+# In your Django settings.py file
+
+CORS_ALLOWED_HEADERS = ['Content-Type', 'Authorization', 'Role']  # Add 'Role' to the list of allowed headers
+
+
 ROOT_URLCONF = 'mamham_backend.urls'
 
 TEMPLATES = [

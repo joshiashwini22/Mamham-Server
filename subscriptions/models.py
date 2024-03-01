@@ -1,5 +1,6 @@
 from django.db import models
 from authentication.models import Customer, Address
+from datetime import timedelta
 
 
 class Plan(models.Model):
@@ -13,7 +14,7 @@ class Meal(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
     image = models.ImageField(upload_to="meal_images")
-    category = models.CharField(max_length=100)
+    # category = models.CharField(max_length=100)
 
 
 class AddOn(models.Model):
@@ -65,6 +66,12 @@ class WeeklyMenu(models.Model):
     week_end_date = models.DateField()
     plan = models.ForeignKey(Plan, on_delete=models.CASCADE, default=1)
     meals = models.ManyToManyField(Meal, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.pk:  # Check if it's a new object
+            # Assuming week_start_date is set before saving
+            self.week_end_date = self.week_start_date + timedelta(days=6)  # Add 6 days for a week
+        super().save(*args, **kwargs)
 
 
 class SubscriptionDeliveryDetails(models.Model):

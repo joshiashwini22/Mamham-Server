@@ -11,14 +11,17 @@ from rest_framework.decorators import api_view
 from authentication.serializers import UserSerializer, CustomerSerializer, AddressSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, logout
-from authentication.models import Customer, Address
+from authentication.models import Customer, User, Address
 
 
-
-# Create your views here.
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 
 class RegisterUser(APIView):
@@ -71,7 +74,7 @@ def login(request: Request):
     return Response({'message': 'Log in successful', 'token': {
         'access': str(token.access_token),
         'refresh': str(token),
-        'user': serialized_user
+        'userinfo': serialized_user
 
     }}, status=200)
 

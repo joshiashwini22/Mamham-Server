@@ -10,5 +10,5 @@ router.register(r'weekly-menu', WeeklyMenuViewSet)
 router.register(r'subscription-delivery-details', SubscriptionDeliveryDetailsViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('/', include(router.urls)),
 ]

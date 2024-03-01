@@ -1,8 +1,6 @@
 from django.db import models
 from authentication.models import Customer, Address
 
-
-# Create your models here.
 class CustomOrder(models.Model):
     status_choices = (
         ("Pending", 'Pending'),
@@ -23,8 +21,7 @@ class CustomOrder(models.Model):
         verbose_name_plural = "Custom Orders"
 
     def __str__(self):
-        return self.id
-
+        return str(self.id)  # Convert to string to return the order ID
 
 class Dish(models.Model):
     category_choices = (
@@ -39,7 +36,6 @@ class Dish(models.Model):
     image = models.ImageField(upload_to="dish_images", blank=True, null=True)
     description = models.TextField()
     category = models.CharField(max_length=20, choices=category_choices, default='Base')
-    portion = models.DecimalField(max_digits=5, decimal_places=2)
 
     class Meta:
         verbose_name = "Dish"
@@ -48,9 +44,8 @@ class Dish(models.Model):
     def __str__(self):
         return self.name
 
-
 class DishList(models.Model):
-    customer = models.ForeignKey(CustomOrder, null=True, on_delete=models.CASCADE)
+    order = models.ForeignKey(CustomOrder, null=True, on_delete=models.CASCADE)
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
     quantity = models.IntegerField()
 
@@ -59,4 +54,4 @@ class DishList(models.Model):
         verbose_name_plural = "Dish Lists"
 
     def __str__(self):
-        return self.id
+        return str(self.order)  # Convert to string to return the order ID
