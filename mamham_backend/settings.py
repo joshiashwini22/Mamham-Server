@@ -174,7 +174,7 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 # Actual directory user files go to
-MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # URL used to access the media
 MEDIA_URL = '/media/'

@@ -8,7 +8,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-from authentication.serializers import UserSerializer, CustomerSerializer, AddressSerializer
+from authentication.serializers import UserSerializer, CustomerSerializer, AddressSerializer, CustomerLoginSerializer, UserLoginSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, logout
 from authentication.models import Customer, User, Address
@@ -65,11 +65,14 @@ def login(request: Request):
     user.lastLogin = datetime.datetime.now()
     user.save()
     token = TokenObtainPairSerializer.get_token(user)
-    if user.is_staff:
-        serialized_user = UserSerializer(user).data
-    else:
-        customer = Customer.objects.get(user=user)
-        serialized_user = CustomerSerializer(customer).data
+    # if user.is_staff:
+    #     serialized_user = UserSerializer(user).data
+    # else:
+    #     customer = Customer.objects.get(user=user)
+    #     serialized_user = CustomerLoginSerializer(customer).data
+
+    serialized_user = UserLoginSerializer(user).data
+
 
     return Response({'message': 'Log in successful', 'token': {
         'access': str(token.access_token),
