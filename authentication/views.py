@@ -24,6 +24,11 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
 
+class AddressViewSet(viewsets.ModelViewSet):
+    queryset = Address.objects.all()
+    serializer_class = AddressSerializer
+
+
 class RegisterUser(APIView):
     def post(self, request, format='json'):
         userSerializer = UserSerializer(data=request.data)
@@ -90,3 +95,5 @@ class LogoutView(APIView):
             return Response({'message': 'Logged out successfully'}, status=status.HTTP_205_RESET_CONTENT)
         else:
             return Response({'message': 'User is not authenticated'}, status=status.HTTP_400_BAD_REQUEST)
+
+

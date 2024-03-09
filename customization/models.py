@@ -9,12 +9,19 @@ class CustomOrder(models.Model):
         ("On the Way", 'On the Way'),
         ("Completed", 'Completed')
     )
+    payment_choices = (
+        ("Cash On Delivery", 'Cash On Delivery'),
+        ("Khalti", 'Khalti'),
+    )
     customer = models.ForeignKey(Customer, null=True, on_delete=models.CASCADE)
     delivery_address = models.ForeignKey(Address, null=True, on_delete=models.CASCADE)
-    delivery_time = models.DateTimeField()
+    delivery_date = models.DateField(null=True)
+    delivery_time = models.TimeField(null=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     remarks = models.CharField(max_length=100, null=True)
     status = models.CharField(max_length=20, choices=status_choices, default='Pending')
+    payment_method = models.CharField(max_length=20, choices=payment_choices, default='Cash On Delivery', null=True)
+    isPaid = models.BooleanField(default=False, null=True)
 
     class Meta:
         verbose_name = "Custom Order"

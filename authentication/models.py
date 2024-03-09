@@ -20,7 +20,6 @@ class Customer(models.Model):
 class Address(models.Model):
     label = models.CharField(max_length=50, default='Location')
     address_line1 = models.CharField(max_length=100)
-    address_line2 = models.CharField(max_length=100)
     city = models.CharField(max_length=100)
     latitude = models.FloatField()  # Changed from IntegerField
     longitude = models.FloatField()  # Changed from IntegerField
