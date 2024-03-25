@@ -52,7 +52,7 @@ class Dish(models.Model):
         return self.name
 
 class DishList(models.Model):
-    order = models.ForeignKey(CustomOrder, null=True, on_delete=models.CASCADE)
+    order = models.ForeignKey(CustomOrder, related_name="dish_lists", null=True, on_delete=models.CASCADE)
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
     quantity = models.IntegerField()
 

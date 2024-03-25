@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'authentication',
     'customization',
     'subscriptions',
+    'khalti'
 ]
 
 MIDDLEWARE = [
@@ -178,3 +179,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # URL used to access the media
 MEDIA_URL = '/media/'
+
+KH_API_URL = 'https://khalti.com/api/v2/payment/verify/'
+KH_PUBLIC_KEY = 'your_khalti_public_key'
+KH_SECRET_KEY = 'your_khalti_secret_key'

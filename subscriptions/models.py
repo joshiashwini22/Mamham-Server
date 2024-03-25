@@ -9,6 +9,12 @@ class Plan(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to="plan_images")
 
+    class Meta:
+        verbose_name = "Plan"
+        verbose_name_plural = "Plans"
+
+    def __str__(self):
+        return self.name
 
 class Meal(models.Model):
     name = models.CharField(max_length=100)
@@ -16,13 +22,24 @@ class Meal(models.Model):
     image = models.ImageField(upload_to="meal_images")
     # category = models.CharField(max_length=100)
 
+    class Meta:
+        verbose_name = "Plan"
+        verbose_name_plural = "Plans"
+
+    def __str__(self):
+        return self.name
 
 class AddOn(models.Model):
     name = models.CharField(max_length=100)
-    description = models.TextField()
-    image = models.ImageField(upload_to="meal_images")
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
+
+    class Meta:
+        verbose_name = "Add On"
+        verbose_name_plural = "Add Ons"
+
+    def __str__(self):
+        return self.name
 
 class Subscription(models.Model):
     DURATION_CHOICES = [
@@ -31,12 +48,12 @@ class Subscription(models.Model):
         ('30D', '30'),
     ]
 
-    DIETARY_GOAL_CHOICES = [
-        ('Regular', 'Regular Diet'),
-        ('WeightLoss', 'Weight Loss'),
-        ('Keto', 'Keto Meal'),
-        ('MuscleGain', 'Gain Muscle'),
-    ]
+    # DIETARY_GOAL_CHOICES = [
+    #     ('Regular', 'Regular Diet'),
+    #     ('WeightLoss', 'Weight Loss'),
+    #     ('Keto', 'Keto Meal'),
+    #     ('MuscleGain', 'Gain Muscle'),
+    # ]
 
     MEAL_TYPE_CHOICES = [
         ('Veg', 'Vegetarian'),
@@ -54,7 +71,7 @@ class Subscription(models.Model):
     duration = models.CharField(choices=DURATION_CHOICES, default='7D')
     delivery_address = models.CharField(max_length=255)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    dietary_goal = models.CharField(max_length=20, choices=DIETARY_GOAL_CHOICES, default='Regular')
+    # dietary_goal = models.CharField(max_length=20, choices=DIETARY_GOAL_CHOICES, default='Regular')
     meal_type = models.CharField(max_length=10, choices=MEAL_TYPE_CHOICES, default='Veg')
     addons = models.ManyToManyField(AddOn, blank=True)
     remarks = models.TextField(blank=True)

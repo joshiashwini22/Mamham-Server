@@ -2,29 +2,33 @@
 
 from rest_framework import serializers
 from .models import CustomOrder, Dish, DishList
+from drf_writable_nested.serializers import WritableNestedModelSerializer
+
 
 class DishSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dish
         fields = '__all__'
 
+
 class DishListSerializer(serializers.ModelSerializer):
-    dish = DishSerializer()
+    dish = serializers.PrimaryKeyRelatedField(queryset=Dish.objects.all())
 
     class Meta:
         model = DishList
         fields = ['dish', 'quantity']
 
-class CustomOrderSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['dish'] = DishSerializer(instance.dish).data
+
+        return representation
+
+
+class CustomOrderSerializer(WritableNestedModelSerializer):
     dish_lists = DishListSerializer(many=True, required=False)
 
     class Meta:
         model = CustomOrder
-        fields = '__all__'
-
-    def create(self, validated_data):
-        dish_lists_data = validated_data.pop('dish_lists', [])
-        order = CustomOrder.objects.create(**validated_data)
-        for dish_list_data in dish_lists_data:
-            DishList.objects.create(order=order, **dish_list_data)
-        return order
+        fields = ['dish_lists', 'customer', 'delivery_address', 'delivery_date', 'delivery_time', 'total', 'remarks',
+                  'status', 'payment_method', 'isPaid']

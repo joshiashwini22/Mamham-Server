@@ -97,3 +97,4 @@ class LogoutView(APIView):
             return Response({'message': 'User is not authenticated'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+

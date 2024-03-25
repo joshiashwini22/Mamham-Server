@@ -17,7 +17,7 @@ class MealSerializer(serializers.ModelSerializer):
 class AddOnSerializer(serializers.ModelSerializer):
     class Meta:
         model = AddOn
-        fields = ['id', 'name', 'description', 'image', 'price']
+        fields = ['id', 'name', 'price']
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):

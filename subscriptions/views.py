@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from .models import Plan, Meal, Subscription, WeeklyMenu, SubscriptionDeliveryDetails
-from .serializers import PlanSerializer, MealSerializer, SubscriptionSerializer, WeeklyMenuSerializer, SubscriptionDeliveryDetailsSerializer
+from .models import Plan, Meal, Subscription, WeeklyMenu, SubscriptionDeliveryDetails, AddOn
+from .serializers import PlanSerializer, MealSerializer, SubscriptionSerializer, WeeklyMenuSerializer, SubscriptionDeliveryDetailsSerializer, AddOnSerializer
 
 class PlanViewSet(viewsets.ModelViewSet):
     queryset = Plan.objects.all()
@@ -27,3 +27,7 @@ class SubscriptionDeliveryDetailsViewSet(viewsets.ModelViewSet):
     queryset = SubscriptionDeliveryDetails.objects.all()
     serializer_class = SubscriptionDeliveryDetailsSerializer
     # permission_classes = [IsAuthenticated]  # Only authenticated users can view and modify delivery details
+
+class AddOnViewSet(viewsets.ModelViewSet):
+    queryset = AddOn.objects.all()
+    serializer_class = AddOnSerializer
