@@ -26,10 +26,8 @@ class Address(models.Model):
     customer = models.ForeignKey(Customer, related_name='addresses', on_delete=models.CASCADE)
 
 
-class Payment(models.Model):
-    CustomerID = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    Amount = models.DecimalField(max_digits=10, decimal_places=2)
-    Method = models.CharField(max_length=255)
-    Status = models.CharField(max_length=50)
-    Type = models.CharField(max_length=50)  # 'Subscription' or 'CustomOrder'
+class Notification(models.Model):
+    customerID = models.ManyToManyField(Customer, null=True, related_name='receiver', )
+    message = models.CharField(max_length=255)
+    read_status = models.BooleanField(default=False)
 

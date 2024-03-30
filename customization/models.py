@@ -1,6 +1,7 @@
 from django.db import models
 from authentication.models import Customer, Address
 
+
 class CustomOrder(models.Model):
     status_choices = (
         ("Pending", 'Pending'),
@@ -22,6 +23,7 @@ class CustomOrder(models.Model):
     status = models.CharField(max_length=20, choices=status_choices, default='Pending')
     payment_method = models.CharField(max_length=20, choices=payment_choices, default='Cash On Delivery', null=True)
     isPaid = models.BooleanField(default=False, null=True)
+    online_payment_response = models.JSONField(null=True, blank=True)
 
     class Meta:
         verbose_name = "Custom Order"
@@ -29,6 +31,7 @@ class CustomOrder(models.Model):
 
     def __str__(self):
         return str(self.id)  # Convert to string to return the order ID
+
 
 class Dish(models.Model):
     category_choices = (
@@ -50,6 +53,7 @@ class Dish(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class DishList(models.Model):
     order = models.ForeignKey(CustomOrder, related_name="dish_lists", null=True, on_delete=models.CASCADE)

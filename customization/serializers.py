@@ -30,5 +30,5 @@ class CustomOrderSerializer(WritableNestedModelSerializer):
 
     class Meta:
         model = CustomOrder
-        fields = ['dish_lists', 'customer', 'delivery_address', 'delivery_date', 'delivery_time', 'total', 'remarks',
-                  'status', 'payment_method', 'isPaid']
+        fields = ['id', 'dish_lists', 'customer', 'delivery_address', 'delivery_date', 'delivery_time', 'total',
+                  'remarks', 'status', 'payment_method', 'isPaid', 'online_payment_response']

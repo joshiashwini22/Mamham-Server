@@ -1,6 +1,6 @@
 from django.urls import path, include
 from . import views
-from authentication.views import CustomerViewSet, UserViewSet, AddressViewSet
+from authentication.views import CustomerViewSet, UserViewSet, AddressViewSet, initiate_khalti_payment
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -12,6 +12,7 @@ urlpatterns = [
     path('register/', views.RegisterUser.as_view(), name='signup'),
     path('login/', views.login, name='login'),
     path('logout/', views.LogoutView.as_view(), name='logout'),
+    path('initiatekhalti/', views.initiate_khalti_payment, name='initiate'),
     path('', include(router.urls)),
 
 ]

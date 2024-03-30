@@ -23,8 +23,8 @@ class Meal(models.Model):
     # category = models.CharField(max_length=100)
 
     class Meta:
-        verbose_name = "Plan"
-        verbose_name_plural = "Plans"
+        verbose_name = "Meal"
+        verbose_name_plural = "Meals"
 
     def __str__(self):
         return self.name
@@ -48,13 +48,6 @@ class Subscription(models.Model):
         ('30D', '30'),
     ]
 
-    # DIETARY_GOAL_CHOICES = [
-    #     ('Regular', 'Regular Diet'),
-    #     ('WeightLoss', 'Weight Loss'),
-    #     ('Keto', 'Keto Meal'),
-    #     ('MuscleGain', 'Gain Muscle'),
-    # ]
-
     MEAL_TYPE_CHOICES = [
         ('Veg', 'Vegetarian'),
         ('NonVeg', 'Non Vegetarian'),
@@ -71,12 +64,12 @@ class Subscription(models.Model):
     duration = models.CharField(choices=DURATION_CHOICES, default='7D')
     delivery_address = models.CharField(max_length=255)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    # dietary_goal = models.CharField(max_length=20, choices=DIETARY_GOAL_CHOICES, default='Regular')
     meal_type = models.CharField(max_length=10, choices=MEAL_TYPE_CHOICES, default='Veg')
     addons = models.ManyToManyField(AddOn, blank=True)
     remarks = models.TextField(blank=True)
     plan = models.ForeignKey(Plan, on_delete=models.CASCADE, null=True)
-
+    isPaid = models.BooleanField(default=False, null=True)
+    online_payment_response = models.JSONField(null=True, blank=True)
 
 class WeeklyMenu(models.Model):
     week_start_date = models.DateField()
@@ -86,7 +79,7 @@ class WeeklyMenu(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk:  # Check if it's a new object
-            # Assuming week_start_date is set before saving
+            # Week_start_date is set before saving
             self.week_end_date = self.week_start_date + timedelta(days=6)  # Add 6 days for a week
         super().save(*args, **kwargs)
 
@@ -108,5 +101,5 @@ class SubscriptionDeliveryDetails(models.Model):
         return f"{self.subscription} - {self.customer}"
 
     class Meta:
-        verbose_name = "Subscription Delivery Details"
+        verbose_name = "Subscription Delivery Detail"
         verbose_name_plural = "Subscription Delivery Details"
