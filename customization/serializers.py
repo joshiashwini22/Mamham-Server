@@ -16,7 +16,7 @@ class DishListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DishList
-        fields = ['dish', 'quantity']
+        fields = ['id', 'dish', 'quantity']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

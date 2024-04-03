@@ -20,11 +20,6 @@ class AddOnSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'price']
 
 
-class SubscriptionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Subscription
-        fields = ['id', 'customer', 'start_date', 'duration', 'delivery_address', 'status', 'meal_type', 'addons', 'remarks', 'plan']
-
 
 class WeeklyMenuSerializer(serializers.ModelSerializer):
     meals = MealSerializer(many=True, read_only=True)
@@ -33,6 +28,12 @@ class WeeklyMenuSerializer(serializers.ModelSerializer):
         model = WeeklyMenu
         fields = ['id', 'week_start_date', 'week_end_date', 'plan', 'meals']
 
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Subscription
+        fields = ['id', 'customer', 'start_date', 'duration', 'delivery_address', 'delivery_time', 'total', 'status', 'addons', 'remarks', 'plan']
 
 
 class SubscriptionDeliveryDetailsSerializer(serializers.ModelSerializer):

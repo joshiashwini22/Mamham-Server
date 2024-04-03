@@ -1,6 +1,6 @@
 from django.db import models
 from authentication.models import Customer, Address
-from datetime import timedelta
+from datetime import timedelta, time
 
 
 class Plan(models.Model):
@@ -48,28 +48,31 @@ class Subscription(models.Model):
         ('30D', '30'),
     ]
 
-    MEAL_TYPE_CHOICES = [
-        ('Veg', 'Vegetarian'),
-        ('NonVeg', 'Non Vegetarian'),
-    ]
-
     STATUS_CHOICES = [
-        ('PENDING', 'Pending'),
-        ('DELIVERED', 'Delivered'),
+        ('ONGOING', 'OnGoing'),
+        ('COMPLETED', 'Completed'),
         ('CANCELLED', 'Cancelled'),
     ]
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    start_date = models.DateTimeField()
-    duration = models.CharField(choices=DURATION_CHOICES, default='7D')
-    delivery_address = models.CharField(max_length=255)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    meal_type = models.CharField(max_length=10, choices=MEAL_TYPE_CHOICES, default='Veg')
+    start_date = models.DateField()  # Set default value to current date
+    end_date = models.DateField(null=True)  # Will be calculated based on start date and duration
+    delivery_time = models.TimeField(default=time(10, 0))
+    duration = models.CharField(choices=DURATION_CHOICES, default='7D', max_length=3)
+    delivery_address = models.ForeignKey(Address, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ONGOING')
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE, null=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     addons = models.ManyToManyField(AddOn, blank=True)
     remarks = models.TextField(blank=True)
-    plan = models.ForeignKey(Plan, on_delete=models.CASCADE, null=True)
-    isPaid = models.BooleanField(default=False, null=True)
+    isPaid = models.BooleanField(default=False)
     online_payment_response = models.JSONField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.pk:  # Check if it's a new object
+            # Automatically set the end date based on start date and duration
+            self.end_date = self.start_date + timedelta(days=int(self.duration[:-1]))
+        super().save(*args, **kwargs)
 
 class WeeklyMenu(models.Model):
     week_start_date = models.DateField()
@@ -85,9 +88,8 @@ class WeeklyMenu(models.Model):
 
 
 class SubscriptionDeliveryDetails(models.Model):
-    subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE)
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    delivery_address = models.ForeignKey(Address, on_delete=models.CASCADE, default=1)
+    subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, related_name='delivery_details', null=True)
+    delivery_address = models.ForeignKey(Address, on_delete=models.CASCADE)
     delivery_date = models.DateField()
     delivery_time = models.TimeField()
     STATUS_CHOICES = [
@@ -98,7 +100,7 @@ class SubscriptionDeliveryDetails(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SCHEDULED')
 
     def __str__(self):
-        return f"{self.subscription} - {self.customer}"
+        return f"{self.subscription.customer} - {self.delivery_address}"
 
     class Meta:
         verbose_name = "Subscription Delivery Detail"

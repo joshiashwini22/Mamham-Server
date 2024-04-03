@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import Plan, Meal, Subscription, WeeklyMenu, SubscriptionDeliveryDetails, AddOn
 from .serializers import PlanSerializer, MealSerializer, SubscriptionSerializer, WeeklyMenuSerializer, SubscriptionDeliveryDetailsSerializer, AddOnSerializer
@@ -18,7 +19,14 @@ class MealViewSet(viewsets.ModelViewSet):
 class SubscriptionViewSet(viewsets.ModelViewSet):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerializer
-    # permission_classes = [IsAuthenticated]  # Only authenticated users can view and modify subscriptions
+
+    # def create(self, request, *args, **kwargs):
+    #     serializer = self.get_serializer(data=request.data)
+    #     if serializer.is_valid():
+    #         # Save the order
+    #         self.perform_create(serializer)
+    #
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class WeeklyMenuViewSet(viewsets.ModelViewSet):
@@ -69,8 +77,34 @@ class WeeklyMenuViewSet(viewsets.ModelViewSet):
 class SubscriptionDeliveryDetailsViewSet(viewsets.ModelViewSet):
     queryset = SubscriptionDeliveryDetails.objects.all()
     serializer_class = SubscriptionDeliveryDetailsSerializer
-    # permission_classes = [IsAuthenticated]  # Only authenticated users can view and modify delivery details
+
 
 class AddOnViewSet(viewsets.ModelViewSet):
     queryset = AddOn.objects.all()
     serializer_class = AddOnSerializer
+
+
+class SubscriptionByCustomer(APIView):
+    def get(self, request, customer_id):
+        orders = Subscription.objects.filter(customer=customer_id)
+        serializer = SubscriptionSerializer(orders, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CompletedSubscriptionByCustomer(APIView):
+    def get(self, request, customer_id, status_type):
+
+        if status_type == 'completed':
+            orders = Subscription.objects.filter(customer=customer_id, status='COMPLETED')
+        else:
+            return Response({'error': 'Invalid status type'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = SubscriptionSerializer(orders, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class OngoingSubscriptionByCustomer(APIView):
+    def get(self, request, customer_id):
+        orders = Subscription.objects.filter(customer=customer_id).exclude(status='COMPLETED')
+        serializer = SubscriptionSerializer(orders, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

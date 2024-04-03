@@ -27,7 +27,7 @@ class Address(models.Model):
 
 
 class Notification(models.Model):
-    customerID = models.ManyToManyField(Customer, null=True, related_name='receiver', )
+    customerID = models.ManyToManyField(Customer, related_name='receiver', )
     message = models.CharField(max_length=255)
     read_status = models.BooleanField(default=False)
 

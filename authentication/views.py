@@ -18,41 +18,20 @@ import requests
 
 
 def initiate_khalti_payment(order):
-    print("Khati Initiate")
+    print("Khalti Initiate")
+    # Fetch the customer details based on the customer ID received
+
+
     # Here you would call the Khalti API to initiate the payment
     url = 'https://a.khalti.com/api/v2/epayment/initiate/'
-    # total_amount = float(order.total) * 100  # Multiply by 100 to convert to paisa
+    total_amount = float(order.total) * 100  # Multiply by 100 to convert to paisa
 
     payload = json.dumps({
         "return_url": "https://google.com/",
         "website_url": "http://localhost:3000/",
-        "amount": 1300,
-        "purchase_order_id": "test12",
+        "amount": total_amount,
+        "purchase_order_id": order.id,
         "purchase_order_name": "test",
-        "customer_info": {
-            "name": "Khalti Bahadur",
-            "email": "example@gmail.com",
-            "phone": "9800000123"
-        },
-        "amount_breakdown": [
-            {
-                "label": "Mark Price",
-                "amount": 1000
-            },
-            {
-                "label": "VAT",
-                "amount": 300
-            }
-        ],
-        "product_details": [
-            {
-                "identity": "1234567890",
-                "name": "Khalti logo",
-                "total_price": 1300,
-                "quantity": 1,
-                "unit_price": 1300
-            }
-        ]
     })
     print(payload)
     headers = {
@@ -67,7 +46,6 @@ def initiate_khalti_payment(order):
         return response.json()
     else:
         return {'error': 'Failed to initiate Khalti payment'}
-
 
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
@@ -149,3 +127,4 @@ class LogoutView(APIView):
             return Response({'message': 'Logged out successfully'}, status=status.HTTP_205_RESET_CONTENT)
         else:
             return Response({'message': 'User is not authenticated'}, status=status.HTTP_400_BAD_REQUEST)
+
