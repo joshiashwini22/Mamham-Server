@@ -3,8 +3,10 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from authentication.views import initiate_khalti_payment
 from .models import Plan, Meal, Subscription, WeeklyMenu, SubscriptionDeliveryDetails, AddOn
 from .serializers import PlanSerializer, MealSerializer, SubscriptionSerializer, WeeklyMenuSerializer, SubscriptionDeliveryDetailsSerializer, AddOnSerializer
+from customization.pagination import StandardResultsSetPagination
 
 class PlanViewSet(viewsets.ModelViewSet):
     queryset = Plan.objects.all()
@@ -20,13 +22,28 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerializer
 
-    # def create(self, request, *args, **kwargs):
-    #     serializer = self.get_serializer(data=request.data)
-    #     if serializer.is_valid():
-    #         # Save the order
-    #         self.perform_create(serializer)
-    #
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            # Save the order
+            self.perform_create(serializer)
+
+            # Process payment based on the selected method
+            print("Khalti ho la")
+
+                # Integrate with Khalti API to initiate payment
+            khalti_response = initiate_khalti_payment(request, serializer.instance)
+            if khalti_response.get('success', True):
+                   # Payment initiated successfully, update order status
+                serializer.instance.paid = True
+                serializer.instance.online_payment_response = khalti_response
+                serializer.instance.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                    # Payment initiation failed
+                return Response({'error': 'Failed to initiate Khalti payment'},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class WeeklyMenuViewSet(viewsets.ModelViewSet):

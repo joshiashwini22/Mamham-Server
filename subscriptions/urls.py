@@ -1,6 +1,7 @@
 from django.urls import path, include
 from subscriptions.views import PlanViewSet, WeeklyMenuViewSet, SubscriptionViewSet, MealViewSet, SubscriptionDeliveryDetailsViewSet, AddOnViewSet, SubscriptionByCustomer, OngoingSubscriptionByCustomer, CompletedSubscriptionByCustomer
 from rest_framework.routers import DefaultRouter
+from authentication.views import verifyKhalti
 
 router = DefaultRouter()
 router.register(r'plans', PlanViewSet, basename='plan')

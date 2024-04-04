@@ -1,6 +1,8 @@
 import datetime
 
-from django.shortcuts import render
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.urls import reverse
 from rest_framework.utils import json
 from rest_framework.views import APIView
 from rest_framework import viewsets
@@ -16,21 +18,24 @@ from django.contrib.auth import authenticate, logout
 from authentication.models import Customer, User, Address
 import requests
 
+from subscriptions.models import Subscription
 
-def initiate_khalti_payment(order):
-    print("Khalti Initiate")
-    # Fetch the customer details based on the customer ID received
 
+def initiate_khalti_payment(request, order):
+    if isinstance(order,Subscription):
+        purchase_id=f'SUB-{order.id}'
+    else:
+        purchase_id=f'CO-{order.id}'
 
     # Here you would call the Khalti API to initiate the payment
     url = 'https://a.khalti.com/api/v2/epayment/initiate/'
     total_amount = float(order.total) * 100  # Multiply by 100 to convert to paisa
-
+    return_url = request.build_absolute_uri(reverse('authentication:verify-payment'))
     payload = json.dumps({
-        "return_url": "https://google.com/",
+        "return_url": return_url,
         "website_url": "http://localhost:3000/",
         "amount": total_amount,
-        "purchase_order_id": order.id,
+        "purchase_order_id": purchase_id,
         "purchase_order_name": "test",
     })
     print(payload)
@@ -43,9 +48,42 @@ def initiate_khalti_payment(order):
     print(response.json())  # Directly parse response content as JSON
     if response.status_code == 200:
         order.isPaid = True
+        order.save()
         return response.json()
     else:
         return {'error': 'Failed to initiate Khalti payment'}
+
+
+def verifyKhalti(request):
+    url = "https://a.khalti.com/api/v2/epayment/lookup/"
+    if request.method == 'GET':
+        headers = {
+            'Authorization': 'key 8b05a1003bea4fc189b0058548a25857',
+            'Content-Type': 'application/json',
+        }
+        pidx = request.GET.get('pidx')
+        data = json.dumps({
+            'pidx': pidx
+        })
+        res = requests.request('POST', url, headers=headers, data=data)
+        print(res)
+        print(res.text)
+
+        new_res = json.loads(res.text)
+        print(new_res)
+
+        if new_res['status'] == 'Completed':
+            # user = request.user
+            # user.has_verified_dairy = True
+            # user.save()
+            # perform your db interaction logic
+            pass
+
+        # else:
+        #     # give user a proper error message
+        #     raise BadRequest("sorry ")
+
+        return redirect('http://localhost:3000/')
 
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
@@ -128,3 +166,15 @@ class LogoutView(APIView):
         else:
             return Response({'message': 'User is not authenticated'}, status=status.HTTP_400_BAD_REQUEST)
 
+
+def get_addresses_for_customer(request, customer_id):
+    try:
+        # Retrieve all addresses for the given customer ID
+        addresses = Address.objects.filter(customer_id=customer_id)
+        # Serialize addresses data if needed
+        addresses_data = [{'id': address.id, 'label': address.label, 'address_line1': address.address_line1, 'city': address.city} for
+                          address in addresses]
+        return JsonResponse({'addresses': addresses_data}, status=200)
+    except Address.DoesNotExist:
+        # Handle the case where no addresses are found for the customer
+        return JsonResponse({'error': 'No addresses found for the customer'}, status=404)

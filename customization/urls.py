@@ -1,10 +1,11 @@
 from django.urls import path, include
 from customization.views import CustomOrderViewSet, DishListViewSet, DishViewSet, DishByCategoryAPIView, \
-    OrderByCustomer, CompletedOrderByCustomer, OngoingOrderByCustomer
+    OrderByCustomer, CompletedOrderByCustomer, OngoingOrderByCustomer, CustomOrderListViewSet
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r'custom-order', CustomOrderViewSet, basename='custom order')
+router.register(r'get-custom-order', CustomOrderListViewSet, basename='custom order list')
 router.register(r'dish-list', DishListViewSet, basename='dish list')
 router.register(r'dishes', DishViewSet, basename='dishes')
 

@@ -1,6 +1,8 @@
 # serializers.py
 
 from rest_framework import serializers
+
+from authentication.serializers import CustomerSerializer, AddressSerializer
 from .models import CustomOrder, Dish, DishList
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 
@@ -32,3 +34,12 @@ class CustomOrderSerializer(WritableNestedModelSerializer):
         model = CustomOrder
         fields = ['id', 'dish_lists', 'customer', 'delivery_address', 'delivery_date', 'delivery_time', 'total',
                   'remarks', 'status', 'payment_method', 'isPaid', 'online_payment_response']
+
+
+class CustomOrderDetailSerializer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
+    delivery_address = AddressSerializer(read_only=True)
+
+    class Meta:
+        model = CustomOrder
+        fields = '__all__'

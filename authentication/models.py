@@ -31,3 +31,4 @@ class Notification(models.Model):
     message = models.CharField(max_length=255)
     read_status = models.BooleanField(default=False)
 
+

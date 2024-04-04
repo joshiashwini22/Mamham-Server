@@ -4,34 +4,17 @@ from rest_framework.response import Response
 from rest_framework.utils import json
 from rest_framework.views import APIView
 from .models import CustomOrder, DishList, Dish
-from customization.serializers import CustomOrderSerializer, DishListSerializer, DishSerializer
+from customization.serializers import CustomOrderSerializer, DishListSerializer, DishSerializer, \
+    CustomOrderDetailSerializer
 import requests
 from authentication.views import initiate_khalti_payment
+from customization.pagination import StandardResultsSetPagination
 
 
 class CustomOrderViewSet(viewsets.ModelViewSet):
     queryset = CustomOrder.objects.all()
     serializer_class = CustomOrderSerializer
-
-    def get_queryset(self):
-        queryset = self.queryset
-        # Retrieve filter parameters from query parameters
-        delivery_date = self.request.query_params.get('delivery_date')
-        delivery_time = self.request.query_params.get('delivery_time')
-        status = self.request.query_params.get('status')
-        order_id = self.request.query_params.get('order_id')
-
-        # Apply filtering if filter parameters are provided
-        if delivery_date:
-            queryset = queryset.filter(delivery_date=delivery_date)
-        if delivery_time:
-            queryset = queryset.filter(delivery_time=delivery_time)
-        if status:
-            queryset = queryset.filter(status=status)
-        if order_id:
-            queryset = queryset.filter(id=order_id)
-
-        return queryset
+    pagination_class = StandardResultsSetPagination
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -46,7 +29,7 @@ class CustomOrderViewSet(viewsets.ModelViewSet):
                 print("Khalti ho la")
 
                 # Integrate with Khalti API to initiate payment
-                khalti_response = initiate_khalti_payment(serializer.instance)
+                khalti_response = initiate_khalti_payment(request, serializer.instance)
                 if khalti_response.get('success', True):
                     # Payment initiated successfully, update order status
                     serializer.instance.paid = True
@@ -63,8 +46,6 @@ class CustomOrderViewSet(viewsets.ModelViewSet):
                 serializer.instance.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 
     #
     # def initiate_khalti_payment(self, order):
@@ -97,6 +78,36 @@ class CustomOrderViewSet(viewsets.ModelViewSet):
     #         return response.json()
     #     else:
     #         return {'error': 'Failed to initiate Khalti payment'}
+
+
+class CustomOrderListViewSet(viewsets.ModelViewSet):
+    queryset = CustomOrder.objects.all()
+    serializer_class = CustomOrderDetailSerializer
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Retrieve filter parameters from query parameters
+        delivery_date = self.request.query_params.get('delivery_date')
+        delivery_time = self.request.query_params.get('delivery_time')
+        status = self.request.query_params.get('status')
+        order_id = self.request.query_params.get('order_id')
+
+        # Apply filtering if filter parameters are provided
+        if delivery_date:
+            queryset = queryset.filter(delivery_date=delivery_date)
+        if delivery_time:
+            queryset = queryset.filter(delivery_time=delivery_time)
+        if status:
+            queryset = queryset.filter(status=status)
+        if order_id:
+            queryset = queryset.filter(id=order_id)
+
+        # Order by creation date in descending order (latest orders first)
+        queryset = queryset.order_by('-id')
+
+        return queryset
 
 
 class DishListViewSet(viewsets.ModelViewSet):
