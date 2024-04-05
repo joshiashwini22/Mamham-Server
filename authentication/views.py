@@ -11,11 +11,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-from authentication.serializers import UserSerializer, CustomerSerializer, AddressSerializer, CustomerLoginSerializer, \
-    UserLoginSerializer
+from authentication.serializers import UserSerializer, CustomerSerializer, AddressSerializer, UserLoginSerializer, NotificationSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, logout
-from authentication.models import Customer, User, Address
+from authentication.models import Customer, User, Address, Notification
 import requests
 
 from subscriptions.models import Subscription
@@ -178,3 +177,19 @@ def get_addresses_for_customer(request, customer_id):
     except Address.DoesNotExist:
         # Handle the case where no addresses are found for the customer
         return JsonResponse({'error': 'No addresses found for the customer'}, status=404)
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+
+
+@api_view(['GET'])
+def user_notifications(request, user_id):
+    try:
+        notifications = Notification.objects.filter(user=user_id)
+        serializer = NotificationSerializer(notifications, many=True)
+        return Response(serializer.data)
+    except Notification.DoesNotExist:
+        return Response({'error': 'No notifications'}, status=status.HTTP_404_NOT_FOUND)
+

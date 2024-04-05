@@ -1,9 +1,8 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.models import User
-from authentication.models import Customer, Address
+from authentication.models import Customer, Address, Notification
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -70,3 +69,8 @@ class UserLoginSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email', 'is_staff', 'profile')
 
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ('id', 'user_id', 'message', 'is_read')

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 # Create your models here.
@@ -27,8 +28,9 @@ class Address(models.Model):
 
 
 class Notification(models.Model):
-    customerID = models.ManyToManyField(Customer, related_name='receiver', )
+    user = models.ForeignKey(User, related_name='receiver', on_delete=models.CASCADE)
     message = models.CharField(max_length=255)
-    read_status = models.BooleanField(default=False)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
 
 

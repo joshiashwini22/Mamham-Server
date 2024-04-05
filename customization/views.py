@@ -1,8 +1,12 @@
+from django.contrib.auth.models import User
+from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.utils import json
 from rest_framework.views import APIView
+
+from authentication.models import Notification, Customer
 from .models import CustomOrder, DishList, Dish
 from customization.serializers import CustomOrderSerializer, DishListSerializer, DishSerializer, \
     CustomOrderDetailSerializer
@@ -21,6 +25,23 @@ class CustomOrderViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             # Save the order
             self.perform_create(serializer)
+
+            # Create a notification for the admin
+            staff_users = User.objects.filter(is_staff=True)
+
+            # Assuming you want to notify all staff users, you can iterate over them
+            for staff_user in staff_users:
+                message = f"A new order has been placed, (ID: #{serializer.instance.id})"
+                # Create notification for each staff user
+                Notification.objects.create(user=staff_user, message=message, created_at=timezone.now())
+
+
+            customermessage = "Thank you for ordering! Your order has been placed."
+            customer = serializer.validated_data.get('customer')
+            # Create a notification for the customer
+            receivercustomer = Customer.objects.get(id=customer.id)
+            userreceiver = receivercustomer.user
+            Notification.objects.create(user=userreceiver, message=customermessage, created_at=timezone.now())
 
             # Process payment based on the selected method
             payment_method = serializer.validated_data.get('payment_method')
@@ -46,6 +67,27 @@ class CustomOrderViewSet(viewsets.ModelViewSet):
                 serializer.instance.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+        if serializer.is_valid():
+
+            # Save the updated order
+            self.perform_update(serializer)
+
+            receiverupdate = Customer.objects.get(id=instance.customer.id)
+            userreceiverupdate = receiverupdate.user_id
+            print(userreceiverupdate)
+
+            message = f"Your order status for ID: #{serializer.instance.id} is {serializer.instance.status}"
+            Notification.objects.create(user_id=userreceiverupdate, message=message)
+
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     #
     # def initiate_khalti_payment(self, order):
