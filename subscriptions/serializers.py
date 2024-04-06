@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+from authentication.serializers import CustomerSerializer
 from .models import Plan, Meal, AddOn, Subscription, WeeklyMenu, SubscriptionDeliveryDetails
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 
@@ -35,10 +37,28 @@ class SubscriptionDeliveryDetailsSerializer(serializers.ModelSerializer):
         fields = ['id', 'subscription', 'delivery_address', 'delivery_date', 'delivery_time', 'status']
 
 
-class SubscriptionSerializer(WritableNestedModelSerializer):
-    delivery_details = SubscriptionDeliveryDetailsSerializer(many=True, required=False)
+class SubscriptionSerializer(serializers.ModelSerializer):
+    # delivery_details = SubscriptionDeliveryDetailsSerializer(many=True, required=False)
 
     class Meta:
         model = Subscription
-        fields = ['id', 'customer', 'start_date', 'duration', 'delivery_address', 'delivery_time', 'total', 'status',
-                  'addons', 'remarks', 'plan', 'delivery_details', 'isPaid', 'online_payment_response']
+        fields = ['id', 'customer', 'start_date', 'end_date', 'duration', 'delivery_address', 'delivery_time', 'total', 'status',
+                  'addons', 'remarks', 'plan',  'isPaid', 'online_payment_response']
+
+
+class SubscriptionListSerializer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
+    plan = PlanSerializer(read_only=True)
+
+    class Meta:
+        model = Subscription
+        fields = ['id', 'customer', 'start_date', 'end_date', 'duration', 'delivery_address', 'delivery_time', 'total', 'status',
+                  'addons', 'remarks', 'plan',  'isPaid', 'online_payment_response']
+
+
+class DeliveryListSerializer(serializers.ModelSerializer):
+    subscription = SubscriptionListSerializer(read_only=True)
+
+    class Meta:
+        model = SubscriptionDeliveryDetails
+        fields = ['id', 'subscription', 'delivery_address', 'delivery_date', 'delivery_time', 'status']

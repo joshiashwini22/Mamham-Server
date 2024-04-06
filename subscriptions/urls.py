@@ -1,5 +1,5 @@
 from django.urls import path, include
-from subscriptions.views import PlanViewSet, WeeklyMenuViewSet, SubscriptionViewSet, MealViewSet, SubscriptionDeliveryDetailsViewSet, AddOnViewSet, SubscriptionByCustomer, OngoingSubscriptionByCustomer, CompletedSubscriptionByCustomer
+from subscriptions.views import PlanViewSet, WeeklyMenuViewSet, SubscriptionViewSet, MealViewSet, SubscriptionDeliveryDetailsViewSet, AddOnViewSet, SubscriptionByCustomer, OngoingSubscriptionByCustomer, CompletedSubscriptionByCustomer, SubscriptionListViewSet, DeliveryListViewSet
 from rest_framework.routers import DefaultRouter
 from authentication.views import verifyKhalti
 
@@ -10,6 +10,9 @@ router.register(r'addons', AddOnViewSet, basename='addon')
 router.register(r'subscription-order', SubscriptionViewSet, basename='subscription')
 router.register(r'weekly-menu', WeeklyMenuViewSet, basename='weekly-menu')
 router.register(r'subscription-delivery-details', SubscriptionDeliveryDetailsViewSet, basename='subscription-delivery-details')
+router.register(r'get-subscription-order', SubscriptionListViewSet, basename='subscription order list')
+router.register(r'subscription-deliveries', DeliveryListViewSet, basename='subscription-deliveries-by-date')
+
 
 urlpatterns = [
     path('', include(router.urls)),

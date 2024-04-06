@@ -94,13 +94,14 @@ class SubscriptionDeliveryDetails(models.Model):
     delivery_time = models.TimeField()
     STATUS_CHOICES = [
         ('SCHEDULED', 'Scheduled'),
+        ('ONTHEWAY', 'On the Way'),
         ('DELIVERED', 'Delivered'),
         ('CANCELLED', 'Cancelled'),
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SCHEDULED')
 
     def __str__(self):
-        return f"{self.subscription.customer} - {self.delivery_address}"
+        return f"{self.subscription.customer} - {self.delivery_date} - {self.subscription}"
 
     class Meta:
         verbose_name = "Subscription Delivery Detail"

@@ -36,7 +36,7 @@ class CustomOrderViewSet(viewsets.ModelViewSet):
                 Notification.objects.create(user=staff_user, message=message, created_at=timezone.now())
 
 
-            customermessage = "Thank you for ordering! Your order has been placed."
+            customermessage = f"Thank you for ordering! Your order has been placed. (Order ID: #{serializer.instance.id})"
             customer = serializer.validated_data.get('customer')
             # Create a notification for the customer
             receivercustomer = Customer.objects.get(id=customer.id)
@@ -82,7 +82,7 @@ class CustomOrderViewSet(viewsets.ModelViewSet):
             userreceiverupdate = receiverupdate.user_id
             print(userreceiverupdate)
 
-            message = f"Your order status for ID: #{serializer.instance.id} is {serializer.instance.status}"
+            message = f"Your order status for Order ID: #{serializer.instance.id} is {serializer.instance.status}"
             Notification.objects.create(user_id=userreceiverupdate, message=message)
 
             return Response(serializer.data)
