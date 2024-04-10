@@ -1,5 +1,5 @@
 from django.urls import path, include
-from subscriptions.views import PlanViewSet, WeeklyMenuViewSet, SubscriptionViewSet, MealViewSet, SubscriptionDeliveryDetailsViewSet, AddOnViewSet, SubscriptionByCustomer, OngoingSubscriptionByCustomer, CompletedSubscriptionByCustomer, SubscriptionListViewSet, DeliveryListViewSet
+from subscriptions.views import PlanViewSet, WeeklyMenuViewSet, SubscriptionViewSet, MealViewSet, SubscriptionDeliveryDetailsViewSet, AddOnViewSet, SubscriptionByCustomer, OngoingSubscriptionByCustomer, CompletedSubscriptionByCustomer, SubscriptionListViewSet, DeliveryListViewSet, CustomerDeliveryListViewSet
 from rest_framework.routers import DefaultRouter
 from authentication.views import verifyKhalti
 
@@ -16,9 +16,10 @@ router.register(r'subscription-deliveries', DeliveryListViewSet, basename='subsc
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('mysubscriptions/by-customer/<int:customer_id>/', SubscriptionByCustomer.as_view(), name='subscriptions-by-customer'),
+    path('mysubscriptions/by-customer/', SubscriptionByCustomer.as_view(), name='subscriptions-by-customer'),
     path('completed-subscriptions/<int:customer_id>/<str:status_type>/', CompletedSubscriptionByCustomer.as_view(),
          name='completed-subscriptions'),
     path('ongoing-subscriptions/<int:customer_id>/ongoing/', OngoingSubscriptionByCustomer.as_view(), name='ongoing-subscriptions'),
-
+    path('customer-deliveries/<int:customer_id>/<int:subscription_id>/', CustomerDeliveryListViewSet.as_view(),
+         name='customer-deliveries'),
 ]

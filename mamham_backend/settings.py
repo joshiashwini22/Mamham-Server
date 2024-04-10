@@ -67,7 +67,6 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization', 'Role']  # Add 'Role' to the list of allowed headers
 
-
 ROOT_URLCONF = 'mamham_backend.urls'
 
 TEMPLATES = [
@@ -143,45 +142,21 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASS': (
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication'
-    ),
+    ],
     'DEFAULT_PAGINATION_CLASS': 'customization.pagination.StandardResultsSetPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_PERMISSION_CLASSES': [
-            'rest_framework.permissions.IsAuthenticated',
-        ]
-
+        'rest_framework.permissions.IsAuthenticated',
+    ]
 }
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=90),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': False,
-
-    'ALGORITHM': 'HS256',
-    'VERIFYING_KEY': None,
-    'AUDIENCE': None,
-    'ISSUER': None,
-    'JWK_URL': None,
-    'LEEWAY': 0,
-
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
-
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
-
-    'JTI_CLAIM': 'jti',
-
-    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 # Actual directory user files go to
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -192,3 +167,10 @@ MEDIA_URL = '/media/'
 KH_API_URL = 'https://khalti.com/api/v2/payment/verify/'
 KH_PUBLIC_KEY = 'your_khalti_public_key'
 KH_SECRET_KEY = 'your_khalti_secret_key'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'mamham.foods@gmail.com'
+EMAIL_HOST_PASSWORD = 'ecxr bhnl ygvt jkaa'

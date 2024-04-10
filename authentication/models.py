@@ -9,6 +9,8 @@ class Customer(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     phone_number = models.CharField(max_length=10, unique=True)
+    otp = models.CharField(max_length=6, blank=True, null=True)
+    is_verified = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "Customer"
@@ -21,9 +23,8 @@ class Customer(models.Model):
 class Address(models.Model):
     label = models.CharField(max_length=50, default='Location')
     address_line1 = models.CharField(max_length=100)
+    landmark = models.CharField(max_length=100, null=True)
     city = models.CharField(max_length=100)
-    latitude = models.FloatField()  # Changed from IntegerField
-    longitude = models.FloatField()  # Changed from IntegerField
     customer = models.ForeignKey(Customer, related_name='addresses', on_delete=models.CASCADE)
 
 

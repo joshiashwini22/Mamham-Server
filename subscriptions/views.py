@@ -1,32 +1,42 @@
 from datetime import timedelta
 
+from django.contrib.auth.models import User
+from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from authentication.emails import send_subscription_email
+from authentication.models import Customer, Notification
 from authentication.views import initiate_khalti_payment
 from .models import Plan, Meal, Subscription, WeeklyMenu, SubscriptionDeliveryDetails, AddOn
 from .serializers import PlanSerializer, MealSerializer, SubscriptionSerializer, WeeklyMenuSerializer, \
-    SubscriptionDeliveryDetailsSerializer, AddOnSerializer, DeliveryListSerializer
+    SubscriptionDeliveryDetailsSerializer, AddOnSerializer, DeliveryListSerializer, SubscriptionListSerializer
 from customization.pagination import StandardResultsSetPagination
+
 
 class PlanViewSet(viewsets.ModelViewSet):
     queryset = Plan.objects.all()
     serializer_class = PlanSerializer
     # permission_classes = [IsAdminUser]  # Only admin can view and modify plans
 
+
 class MealViewSet(viewsets.ModelViewSet):
     queryset = Meal.objects.all()
     serializer_class = MealSerializer
     # permission_classes = [IsAdminUser]  # Only admin can view and modify meals
 
+
 class SubscriptionViewSet(viewsets.ModelViewSet):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerializer
+    authentication_classes = [JWTAuthentication]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+        print(request.user.is_staff)
         if serializer.is_valid():
             # Save the order
             self.perform_create(serializer)
@@ -34,16 +44,17 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
             # Process payment based on the selected method
             print("Khalti ho la")
 
-                # Integrate with Khalti API to initiate payment
+            # Integrate with Khalti API to initiate payment
             khalti_response = initiate_khalti_payment(request, serializer.instance)
             if khalti_response.get('success', True):
-                   # Payment initiated successfully, update order status
+                # Payment initiated successfully, update order status
                 serializer.instance.paid = True
                 serializer.instance.online_payment_response = khalti_response
                 serializer.instance.save()
-                   # Create SubscriptionDeliveryDetails objects
+                # Create SubscriptionDeliveryDetails objects
                 subscription = serializer.instance
-                delivery_dates = [subscription.start_date + timedelta(days=i) for i in range(int(subscription.duration[:-1]))]
+                delivery_dates = [subscription.start_date + timedelta(days=i) for i in
+                                  range(int(subscription.duration[:-1]))]
                 for delivery_date in delivery_dates:
                     SubscriptionDeliveryDetails.objects.create(
                         subscription=subscription,
@@ -53,19 +64,57 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
                         status='SCHEDULED'
                     )
 
+                # Create a notification for the admin
+                staff_users = User.objects.filter(is_staff=True)
+
+                # Assuming you want to notify all staff users, you can iterate over them
+                for staff_user in staff_users:
+                    message = f"A new subscription has been placed, (ID: #{serializer.instance.id})"
+                    # Create notification for each staff user
+                    Notification.objects.create(user=staff_user, message=message, created_at=timezone.now())
+
+                customermessage = f"Thank you for subscribing! Your order has been placed. Please check your email for details. (Subscription ID: #{serializer.instance.id})"
+                Notification.objects.create(user=request.user, message=customermessage, created_at=timezone.now())
+
+                send_subscription_email(request, subscription, request.user.email)
+
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+
             else:
-                    # Payment initiation failed
+                # Payment initiation failed
                 return Response({'error': 'Failed to initiate Khalti payment'},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+        if serializer.is_valid():
+
+            # Save the updated order
+            self.perform_update(serializer)
+
+            receiverupdate = Customer.objects.get(id=instance.customer.id)
+            userreceiverupdate = receiverupdate.user_id
+            print(userreceiverupdate)
+
+            is_admin_update = request.user.is_staff
+            print(request.user)
+
+            message = f"Your order status for Order ID: #{serializer.instance.id} is {serializer.instance.status}"
+            Notification.objects.create(user_id=userreceiverupdate, message=message, created_at=timezone.now())
+
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SubscriptionListViewSet(viewsets.ModelViewSet):
     queryset = Subscription.objects.all()
-    serializer_class = SubscriptionSerializer
+    serializer_class = SubscriptionListSerializer
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
@@ -89,6 +138,7 @@ class SubscriptionListViewSet(viewsets.ModelViewSet):
         queryset = queryset.order_by('-id')
 
         return queryset
+
 
 class WeeklyMenuViewSet(viewsets.ModelViewSet):
     queryset = WeeklyMenu.objects.all()
@@ -139,6 +189,36 @@ class SubscriptionDeliveryDetailsViewSet(viewsets.ModelViewSet):
     queryset = SubscriptionDeliveryDetails.objects.all()
     serializer_class = SubscriptionDeliveryDetailsSerializer
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+        if serializer.is_valid():
+            # Save the updated subscription delivery details
+            self.perform_update(serializer)
+
+            # Get the user receiving the notification
+            user_receiver = instance.subscription.customer.user.id
+
+            message = f"Delivery for Subscription Delivery ID: #{instance.id} has been updated."
+
+
+            # Create a notification for the user
+            Notification.objects.create(user_id=user_receiver, message=message, created_at=timezone.now())
+            # Create a notification for the admin
+            staff_users = User.objects.filter(is_staff=True)
+
+            # Assuming you want to notify all staff users, you can iterate over them
+            for staff_user in staff_users:
+                message = f"A new order has been placed, (ID: #{serializer.instance.id})"
+                # Create notification for each staff user
+                Notification.objects.create(user=staff_user, message=message, created_at=timezone.now())
+
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class AddOnViewSet(viewsets.ModelViewSet):
     queryset = AddOn.objects.all()
@@ -147,7 +227,7 @@ class AddOnViewSet(viewsets.ModelViewSet):
 
 class SubscriptionByCustomer(APIView):
     def get(self, request, customer_id):
-        orders = Subscription.objects.filter(customer=customer_id)
+        orders = Subscription.objects.filter(customer=customer_id).order_by('-id')
         serializer = SubscriptionSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -156,7 +236,7 @@ class CompletedSubscriptionByCustomer(APIView):
     def get(self, request, customer_id, status_type):
 
         if status_type == 'completed':
-            orders = Subscription.objects.filter(customer=customer_id, status='COMPLETED')
+            orders = Subscription.objects.filter(customer=customer_id, status='COMPLETED').order_by('-id')
         else:
             return Response({'error': 'Invalid status type'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -166,7 +246,7 @@ class CompletedSubscriptionByCustomer(APIView):
 
 class OngoingSubscriptionByCustomer(APIView):
     def get(self, request, customer_id):
-        orders = Subscription.objects.filter(customer=customer_id).exclude(status='COMPLETED')
+        orders = Subscription.objects.filter(customer=customer_id).exclude(status='COMPLETED').order_by('-id')
         serializer = SubscriptionSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -187,8 +267,6 @@ class DeliveryListViewSet(viewsets.ModelViewSet):
         delivery_date = self.request.query_params.get('delivery_date')
         status = self.request.query_params.get('status')
 
-
-
         if subscription:
             queryset = queryset.filter(subscription=subscription)
         if delivery_address:
@@ -204,8 +282,15 @@ class DeliveryListViewSet(viewsets.ModelViewSet):
         if subscription__customer__id:
             queryset = queryset.filter(subscription__customer__id=subscription__customer__id)
 
-
         # Order by creation date in descending order (latest orders first)
         queryset = queryset.order_by('-id')
 
         return queryset
+
+
+class CustomerDeliveryListViewSet(APIView):
+    def get(self, request, customer_id, subscription_id):  # Add 'subscription_id' as a parameter
+        deliveries = SubscriptionDeliveryDetails.objects.filter(subscription__customer=customer_id, subscription_id=subscription_id).exclude(
+            status='COMPLETED').order_by('-id')
+        serializer = DeliveryListSerializer(deliveries, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

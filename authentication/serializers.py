@@ -30,10 +30,11 @@ class AddressSerializer(serializers.ModelSerializer):
 
 class CustomerSerializer(serializers.ModelSerializer):
     addresses = AddressSerializer(many=True, required=False)  # Nested serializer for addresses
-
+    otp = serializers.CharField(write_only=True)
+    is_verified = serializers.BooleanField(default=False)
     class Meta:
         model = Customer
-        fields = ('id', 'user', 'addresses', 'first_name', 'last_name', 'phone_number')
+        fields = ('id', 'user', 'addresses', 'first_name', 'last_name', 'phone_number', 'otp', 'is_verified')
 
 
 class CustomerLoginSerializer(serializers.ModelSerializer):

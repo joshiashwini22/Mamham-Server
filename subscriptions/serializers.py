@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from authentication.serializers import CustomerSerializer
+from authentication.serializers import CustomerSerializer, AddressSerializer
 from .models import Plan, Meal, AddOn, Subscription, WeeklyMenu, SubscriptionDeliveryDetails
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 
@@ -49,6 +49,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 class SubscriptionListSerializer(serializers.ModelSerializer):
     customer = CustomerSerializer(read_only=True)
     plan = PlanSerializer(read_only=True)
+    delivery_address = AddressSerializer(read_only=True)
 
     class Meta:
         model = Subscription
@@ -58,6 +59,7 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
 
 class DeliveryListSerializer(serializers.ModelSerializer):
     subscription = SubscriptionListSerializer(read_only=True)
+    delivery_address = AddressSerializer(read_only=True)
 
     class Meta:
         model = SubscriptionDeliveryDetails

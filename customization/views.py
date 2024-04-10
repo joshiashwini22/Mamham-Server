@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.utils import json
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from authentication.models import Notification, Customer
 from .models import CustomOrder, DishList, Dish
@@ -18,6 +19,7 @@ from customization.pagination import StandardResultsSetPagination
 class CustomOrderViewSet(viewsets.ModelViewSet):
     queryset = CustomOrder.objects.all()
     serializer_class = CustomOrderSerializer
+    authentication_classes = [JWTAuthentication]
     pagination_class = StandardResultsSetPagination
 
     def create(self, request, *args, **kwargs):
@@ -81,6 +83,11 @@ class CustomOrderViewSet(viewsets.ModelViewSet):
             receiverupdate = Customer.objects.get(id=instance.customer.id)
             userreceiverupdate = receiverupdate.user_id
             print(userreceiverupdate)
+
+            is_admin_update = request.user.is_staff
+            print(request.user)
+
+
 
             message = f"Your order status for Order ID: #{serializer.instance.id} is {serializer.instance.status}"
             Notification.objects.create(user_id=userreceiverupdate, message=message)
@@ -172,7 +179,7 @@ class DishByCategoryAPIView(APIView):
 
 class OrderByCustomer(APIView):
     def get(self, request, customer_id):
-        orders = CustomOrder.objects.filter(customer=customer_id)
+        orders = CustomOrder.objects.filter(customer=customer_id).order_by('-id')
         serializer = CustomOrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -181,7 +188,7 @@ class CompletedOrderByCustomer(APIView):
     def get(self, request, customer_id, status_type):
 
         if status_type == 'completed':
-            orders = CustomOrder.objects.filter(customer=customer_id, status='Completed')
+            orders = CustomOrder.objects.filter(customer=customer_id, status='Completed').order_by('-id')
         else:
             return Response({'error': 'Invalid status type'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -191,6 +198,6 @@ class CompletedOrderByCustomer(APIView):
 
 class OngoingOrderByCustomer(APIView):
     def get(self, request, customer_id):
-        orders = CustomOrder.objects.filter(customer=customer_id).exclude(status='Completed')
+        orders = CustomOrder.objects.filter(customer=customer_id).exclude(status='Completed').order_by('-id')
         serializer = CustomOrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
