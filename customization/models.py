@@ -66,3 +66,7 @@ class DishList(models.Model):
 
     def __str__(self):
         return str(self.order)  # Convert to string to return the order ID
+
+
+
+

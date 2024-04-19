@@ -34,6 +34,15 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     serializer_class = SubscriptionSerializer
     authentication_classes = [JWTAuthentication]
 
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        # Update related SubscriptionDeliveryDetails
+        delivery_details = SubscriptionDeliveryDetails.objects.filter(subscription=instance)
+        for detail in delivery_details:
+            detail.delivery_address = instance.delivery_address
+            detail.delivery_time = instance.delivery_time
+            detail.save()
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         print(request.user.is_staff)
@@ -46,6 +55,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
 
             # Integrate with Khalti API to initiate payment
             khalti_response = initiate_khalti_payment(request, serializer.instance)
+            print(khalti_response)
             if khalti_response.get('success', True):
                 # Payment initiated successfully, update order status
                 serializer.instance.paid = True
@@ -94,17 +104,13 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
 
         if serializer.is_valid():
 
-            # Save the updated order
             self.perform_update(serializer)
 
             receiverupdate = Customer.objects.get(id=instance.customer.id)
             userreceiverupdate = receiverupdate.user_id
             print(userreceiverupdate)
 
-            is_admin_update = request.user.is_staff
-            print(request.user)
-
-            message = f"Your order status for Order ID: #{serializer.instance.id} is {serializer.instance.status}"
+            message = f"There were some changes. Your order status for Order ID: #{serializer.instance.id} is {serializer.instance.status}."
             Notification.objects.create(user_id=userreceiverupdate, message=message, created_at=timezone.now())
 
             return Response(serializer.data)
@@ -133,6 +139,12 @@ class SubscriptionListViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(delivery_time=delivery_time)
         if status:
             queryset = queryset.filter(status=status)
+
+        # Iterate over each subscription and update its status if the end date has passed
+        for subscription in queryset:
+            if subscription.end_date < timezone.now().date() and subscription.status != 'COMPLETED':
+                subscription.status = 'COMPLETED'
+                subscription.save()
 
         # Order by creation date in descending order (latest orders first)
         queryset = queryset.order_by('-id')
@@ -201,8 +213,7 @@ class SubscriptionDeliveryDetailsViewSet(viewsets.ModelViewSet):
             # Get the user receiving the notification
             user_receiver = instance.subscription.customer.user.id
 
-            message = f"Delivery for Subscription Delivery ID: #{instance.id} has been updated."
-
+            message = f"Delivery for Subscription Delivery ID: #{instance.id} has been updated. Your order status is {instance.status}"
 
             # Create a notification for the user
             Notification.objects.create(user_id=user_receiver, message=message, created_at=timezone.now())
@@ -211,7 +222,7 @@ class SubscriptionDeliveryDetailsViewSet(viewsets.ModelViewSet):
 
             # Assuming you want to notify all staff users, you can iterate over them
             for staff_user in staff_users:
-                message = f"A new order has been placed, (ID: #{serializer.instance.id})"
+                message = f"Delivery changes have been made for, (ID: #{serializer.instance.id})"
                 # Create notification for each staff user
                 Notification.objects.create(user=staff_user, message=message, created_at=timezone.now())
 
@@ -246,8 +257,21 @@ class CompletedSubscriptionByCustomer(APIView):
 
 class OngoingSubscriptionByCustomer(APIView):
     def get(self, request, customer_id):
-        orders = Subscription.objects.filter(customer=customer_id).exclude(status='COMPLETED').order_by('-id')
-        serializer = SubscriptionSerializer(orders, many=True)
+        # Retrieve ongoing subscriptions for the customer
+        ongoing_subscriptions = Subscription.objects.filter(customer=customer_id, status='ONGOING').order_by('-id')
+
+        # Iterate over each subscription and update its status if the end date has passed
+        for subscription in ongoing_subscriptions:
+            if subscription.end_date < timezone.now().date():
+                subscription.status = 'COMPLETED'
+                subscription.save()
+
+        # Filter out completed subscriptions
+        ongoing_subscriptions = ongoing_subscriptions.exclude(status='COMPLETED')
+
+        # Serialize the ongoing subscriptions
+        serializer = SubscriptionSerializer(ongoing_subscriptions, many=True)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -290,7 +314,8 @@ class DeliveryListViewSet(viewsets.ModelViewSet):
 
 class CustomerDeliveryListViewSet(APIView):
     def get(self, request, customer_id, subscription_id):  # Add 'subscription_id' as a parameter
-        deliveries = SubscriptionDeliveryDetails.objects.filter(subscription__customer=customer_id, subscription_id=subscription_id).exclude(
+        deliveries = SubscriptionDeliveryDetails.objects.filter(subscription__customer=customer_id,
+                                                                subscription_id=subscription_id).exclude(
             status='COMPLETED').order_by('-id')
         serializer = DeliveryListSerializer(deliveries, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

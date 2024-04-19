@@ -1,17 +1,21 @@
 import datetime
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from rest_framework.utils import json
 from rest_framework.views import APIView
 from rest_framework import viewsets
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
+# from rest_framework_simplejwt.tokens import RefreshToken
 
 from authentication.serializers import UserSerializer, CustomerSerializer, AddressSerializer, UserLoginSerializer, NotificationSerializer
 from django.contrib.auth.models import User
@@ -79,6 +83,18 @@ class VerifyEmail(APIView):
         except Customer.DoesNotExist:
             return Response({"error": "Customer not found."}, status=404)
 
+class ResendOTP(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        try:
+            customer = Customer.objects.get(user__email=email)
+            otp = generate_otp()  # Generate a new OTP
+            customer.otp = otp
+            customer.save()
+            send_otp_via_mail(email, otp)
+            return Response({"message": "OTP resent successfully."}, status=200)
+        except ObjectDoesNotExist:
+            return Response({"error": "Customer not found."}, status=404)
 
 @api_view(['POST'])
 def login(request: Request):
@@ -115,6 +131,8 @@ def login(request: Request):
     user.lastLogin = datetime.datetime.now()
     user.save()
     token = TokenObtainPairSerializer.get_token(user)
+    refresh = RefreshToken.for_user(user)
+    # print(refresh)
 
 
     serialized_user = UserLoginSerializer(user).data
@@ -124,36 +142,15 @@ def login(request: Request):
         'message': 'Log in successful',
         'token': {
             'access': str(token.access_token),
-            'refresh': str(token),
+            'refresh': str(refresh),
             'userinfo': UserLoginSerializer(user).data
         }
     }
-
+    print(response_data)
     # Set token in Authorization header
     response = Response(response_data, status=200)
-    response['Authorization'] = f'Bearer {response_data}'
+    response['Authorization'] = f'Bearer {token.access_token}'
     return response
-
-
-@api_view(['POST'])
-def refresh_token(request):
-    if 'refresh' not in request.data:
-        return Response({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-    refresh = request.data['refresh']
-    try:
-        refresh_token = RefreshToken(refresh)
-        access_token = str(refresh_token.access_token)
-        # Check if the refresh token is expired
-        if refresh_token.is_expired:
-            return Response({'error': 'Refresh token has expired'}, status=status.HTTP_401_UNAUTHORIZED)
-        else:
-            # Generate a new access token and return it
-            new_access_token = str(refresh_token.access_token)
-            return Response({'access_token': new_access_token}, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response({'error': 'Invalid refresh token'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
@@ -184,10 +181,70 @@ class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
 
 
+class AdminNotificationViewSet(viewsets.ModelViewSet):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+
+    def create(self, request, *args, **kwargs):
+        # Retrieve the list of user IDs and the message from the request data
+        user_ids = request.data.get('users', [])
+        message = request.data.get('message', '')
+        title = request.data.get('title', '')
+        print(user_ids)
+
+        # Check if user IDs or message are missing
+        if not user_ids:
+            return Response({'error': 'User IDs are required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not message:
+            return Response({'error': 'Message is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        created_notifications = []
+        errors = []
+
+        # Iterate over the list of user IDs
+        for user_id in user_ids:
+            try:
+                print(user_id)
+                # Retrieve the User instance corresponding to the user ID
+                user_instance = User.objects.get(pk=user_id)
+                # Create a Notification object for the user instance
+                Notification.objects.create(user=user_instance, message=message)
+                print(title, user_instance.email, message)
+                send_notification_mail(title, user_instance.email, message)
+            except Exception as e:
+                # Collect any errors that occur during creation
+                errors.append({'user_id': user_id, 'error': str(e)})
+
+        # If any errors occurred during creation, return a Response with error details
+        if errors:
+            error_messages = [f"Error for user {error['user_id']}: {error['error']}" for error in errors]
+            return Response({'errors': error_messages}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'success': 'Notifications created successfully'}, status=status.HTTP_201_CREATED)
+
+
+
+
 @api_view(['GET'])
-def user_notifications(request, user_id):
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def user_notifications(request):
     try:
-        notifications = Notification.objects.filter(user=user_id).order_by('-id')
+        print(request.user)
+        notifications = Notification.objects.filter(user=request.user).order_by('-id')
+        serializer = NotificationSerializer(notifications, many=True)
+        return Response(serializer.data)
+    except Notification.DoesNotExist:
+        return Response({'error': 'No notifications'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def admin_notification(request):
+    try:
+        print(request.user)
+        notifications = Notification.objects.filter(user=request.user).order_by('-id')
         serializer = NotificationSerializer(notifications, many=True)
         return Response(serializer.data)
     except Notification.DoesNotExist:
@@ -247,14 +304,7 @@ def verifyKhalti(request):
         print(new_res)
 
         if new_res['status'] == 'Completed':
-            # user = request.user
-            # user.has_verified_dairy = True
-            # user.save()
-            # perform your db interaction logic
+
             pass
 
-        # else:
-        #     # give user a proper error message
-        #     raise BadRequest("sorry ")
-
-        return redirect('http://localhost:3000/')
+        return redirect('http://localhost:3000/payment-completion/')

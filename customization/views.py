@@ -14,12 +14,15 @@ from customization.serializers import CustomOrderSerializer, DishListSerializer,
 import requests
 from authentication.views import initiate_khalti_payment
 from customization.pagination import StandardResultsSetPagination
+from django.db import models
+from django.db.models import Count
+
 
 
 class CustomOrderViewSet(viewsets.ModelViewSet):
     queryset = CustomOrder.objects.all()
     serializer_class = CustomOrderSerializer
-    authentication_classes = [JWTAuthentication]
+    # authentication_classes = [JWTAuthentication]
     pagination_class = StandardResultsSetPagination
 
     def create(self, request, *args, **kwargs):
@@ -201,3 +204,36 @@ class OngoingOrderByCustomer(APIView):
         orders = CustomOrder.objects.filter(customer=customer_id).exclude(status='Completed').order_by('-id')
         serializer = CustomOrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class OrderDashboardAPIView(APIView):
+    def get(self, request, format=None):
+        # Total number of orders
+        total_orders = CustomOrder.objects.count()
+
+        # Number of orders in each status
+        order_status_counts = CustomOrder.objects.values('status').annotate(count=Count('id'))
+
+        # Total revenue
+        total_revenue = CustomOrder.objects.aggregate(total_revenue=models.Sum('total'))['total_revenue']
+
+        # Average order value
+        average_order_value = CustomOrder.objects.aggregate(average_order_value=models.Avg('total'))['average_order_value']
+
+        # Query the database to get the top 5 ordered dishes with their quantities
+        top_dishes = DishList.objects.values('dish__name').annotate(quantity=Count('dish')).order_by('-quantity')[:5]
+
+        order_status_counts_dict = {}
+        for status_count in order_status_counts:
+            order_status_counts_dict[status_count['status']] = status_count['count']
+
+        # Response data
+        data = {
+            'total_orders': total_orders,
+            'order_status_counts': order_status_counts_dict,
+            'total_revenue': total_revenue,
+            'average_order_value': average_order_value,
+            'top_dishes_data': list(top_dishes)
+        }
+
+        return Response(data)

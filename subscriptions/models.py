@@ -74,6 +74,7 @@ class Subscription(models.Model):
             self.end_date = self.start_date + timedelta(days=int(self.duration[:-1]))
         super().save(*args, **kwargs)
 
+
 class WeeklyMenu(models.Model):
     week_start_date = models.DateField()
     week_end_date = models.DateField()
