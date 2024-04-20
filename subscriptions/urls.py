@@ -1,5 +1,8 @@
 from django.urls import path, include
-from subscriptions.views import PlanViewSet, WeeklyMenuViewSet, SubscriptionViewSet, MealViewSet, SubscriptionDeliveryDetailsViewSet, AddOnViewSet, SubscriptionByCustomer, OngoingSubscriptionByCustomer, CompletedSubscriptionByCustomer, SubscriptionListViewSet, DeliveryListViewSet, CustomerDeliveryListViewSet
+from subscriptions.views import PlanViewSet, WeeklyMenuViewSet, SubscriptionViewSet, MealViewSet, \
+    SubscriptionDeliveryDetailsViewSet, AddOnViewSet, SubscriptionByCustomer, OngoingSubscriptionByCustomer, \
+    CompletedSubscriptionByCustomer, SubscriptionListViewSet, DeliveryListViewSet, CustomerDeliveryListViewSet, \
+    SubscriptionDashboardAPIView
 from rest_framework.routers import DefaultRouter
 from authentication.views import verifyKhalti
 
@@ -22,4 +25,6 @@ urlpatterns = [
     path('ongoing-subscriptions/<int:customer_id>/ongoing/', OngoingSubscriptionByCustomer.as_view(), name='ongoing-subscriptions'),
     path('customer-deliveries/<int:customer_id>/<int:subscription_id>/', CustomerDeliveryListViewSet.as_view(),
          name='customer-deliveries'),
+    path('dashboard/subscriptionlist/', SubscriptionDashboardAPIView.as_view(), name='dashboard-subscription'),
+
 ]

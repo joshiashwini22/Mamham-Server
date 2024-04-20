@@ -1,6 +1,6 @@
 from django.contrib import admin
-from authentication.models import Customer, Address, Notification
+from authentication.models import Customer, Address, Notification, AdminUser
 # Register your models here.
 
 admin.site.register(
-    [Customer, Address, Notification])
+    [Customer, AdminUser, Address, Notification])

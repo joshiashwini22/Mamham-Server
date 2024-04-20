@@ -87,49 +87,12 @@ class CustomOrderViewSet(viewsets.ModelViewSet):
             userreceiverupdate = receiverupdate.user_id
             print(userreceiverupdate)
 
-            is_admin_update = request.user.is_staff
-            print(request.user)
-
-
-
             message = f"Your order status for Order ID: #{serializer.instance.id} is {serializer.instance.status}"
             Notification.objects.create(user_id=userreceiverupdate, message=message)
 
             return Response(serializer.data)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    #
-    # def initiate_khalti_payment(self, order):
-    #     # Here you would call the Khalti API to initiate the payment
-    #     url = 'https://khalti.com/api/v2/epayment/initiate/'
-    #     total_amount = float(order.total) * 100  # Multiply by 100 to convert to paisa
-    #
-    #     payload =  json.dumps({
-    #         "return_url": "http://google.com/",
-    #         "website_url": "http://localhost:3000/",
-    #         "amount": total_amount,
-    #         "purchase_order_id": order.id,
-    #         "purchase_order_name": "test",
-    #         "customer_info": {
-    #             "name": "Ram Bahadur",
-    #             "email": "test@khalti.com",
-    #             "phone": "9800000001"
-    #         }
-    #     })
-    #     print(payload)
-    #     headers = {
-    #         'Authorization': 'Key test_secret_key_5327491a91ff4f688544e72de574e9f5',
-    #         'Content-Type': 'application/json',
-    #     }
-    #
-    #     response = requests.post(url, json=payload, headers=headers)
-    #
-    #     if response.status_code == 200:
-    #         order.isPaid = True
-    #         return response.json()
-    #     else:
-    #         return {'error': 'Failed to initiate Khalti payment'}
 
 
 class CustomOrderListViewSet(viewsets.ModelViewSet):
@@ -217,9 +180,6 @@ class OrderDashboardAPIView(APIView):
         # Total revenue
         total_revenue = CustomOrder.objects.aggregate(total_revenue=models.Sum('total'))['total_revenue']
 
-        # Average order value
-        average_order_value = CustomOrder.objects.aggregate(average_order_value=models.Avg('total'))['average_order_value']
-
         # Query the database to get the top 5 ordered dishes with their quantities
         top_dishes = DishList.objects.values('dish__name').annotate(quantity=Count('dish')).order_by('-quantity')[:5]
 
@@ -232,7 +192,6 @@ class OrderDashboardAPIView(APIView):
             'total_orders': total_orders,
             'order_status_counts': order_status_counts_dict,
             'total_revenue': total_revenue,
-            'average_order_value': average_order_value,
             'top_dishes_data': list(top_dishes)
         }
 

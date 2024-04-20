@@ -17,10 +17,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 # from rest_framework_simplejwt.tokens import RefreshToken
 
-from authentication.serializers import UserSerializer, CustomerSerializer, AddressSerializer, UserLoginSerializer, NotificationSerializer
+from authentication.serializers import UserSerializer, CustomerSerializer, AddressSerializer, UserLoginSerializer, \
+    NotificationSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, logout
-from authentication.models import Customer, User, Address, Notification
+from authentication.models import Customer, User, Address, Notification, AdminUser
 import requests
 
 from subscriptions.models import Subscription
@@ -83,6 +84,7 @@ class VerifyEmail(APIView):
         except Customer.DoesNotExist:
             return Response({"error": "Customer not found."}, status=404)
 
+
 class ResendOTP(APIView):
     def post(self, request):
         email = request.data.get('email')
@@ -95,6 +97,75 @@ class ResendOTP(APIView):
             return Response({"message": "OTP resent successfully."}, status=200)
         except ObjectDoesNotExist:
             return Response({"error": "Customer not found."}, status=404)
+
+
+class ForgotPassword(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+
+        try:
+            if email == "admin@mail.com":
+                admin = AdminUser.objects.get(user__email=email)
+                otp = generate_otp()  # Generate a new OTP
+                admin.otp = otp
+                admin.save()
+                send_otp_admin_password__mail(otp)
+                return Response({"message": "OTP for admin password"}, status=200)
+
+            else:
+                customer = Customer.objects.get(user__email=email)
+                otp = generate_otp()  # Generate a new OTP
+                customer.otp = otp
+                customer.save()
+                send_otp_forgot_password__mail(email, otp)
+                return Response({"message": "OTP for forgot password"}, status=200)
+        except ObjectDoesNotExist:
+            return Response({"error": "Customer not found."}, status=404)
+
+
+class ResetPassword(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        otp_entered = request.data.get('otp')
+        new_password = request.data.get('new_password')
+
+        try:
+            # Retrieve the user by email
+            user = User.objects.get(email=email)
+
+            if email == "admin@mail.com":
+                # Retrieve the corresponding customer profile
+                admin = AdminUser.objects.get(user=user)
+                if admin.otp == otp_entered:
+                    # Set the new password for the user
+                    user.set_password(new_password)
+                    user.save()
+                    # Clear the OTP from the customer profile
+                    admin.otp = None
+                    admin.save()
+                    return Response({"message": "Password reset for admin successful."}, status=200)
+                else:
+                    return Response({"error": "Invalid OTP."}, status=400)
+            else:
+                # Retrieve the corresponding customer profile
+                customer = Customer.objects.get(user=user)
+
+                # Check if the entered OTP matches the one saved in the customer profile
+                if customer.otp == otp_entered:
+                    # Set the new password for the user
+                    user.set_password(new_password)
+                    user.save()
+                    # Clear the OTP from the customer profile
+                    customer.otp = None
+                    customer.save()
+                    return Response({"message": "Password reset successfully."}, status=200)
+                else:
+                    return Response({"error": "Invalid OTP."}, status=400)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=404)
+        except Customer.DoesNotExist:
+            return Response({"error": "Customer profile not found."}, status=404)
+
 
 @api_view(['POST'])
 def login(request: Request):
@@ -134,7 +205,6 @@ def login(request: Request):
     refresh = RefreshToken.for_user(user)
     # print(refresh)
 
-
     serialized_user = UserLoginSerializer(user).data
 
     # Construct response
@@ -168,8 +238,9 @@ def get_addresses_for_customer(request, customer_id):
         # Retrieve all addresses for the given customer ID
         addresses = Address.objects.filter(customer_id=customer_id)
         # Serialize addresses data if needed
-        addresses_data = [{'id': address.id, 'label': address.label, 'address_line1': address.address_line1, 'city': address.city} for
-                          address in addresses]
+        addresses_data = [
+            {'id': address.id, 'label': address.label, 'address_line1': address.address_line1, 'city': address.city} for
+            address in addresses]
         return JsonResponse({'addresses': addresses_data}, status=200)
     except Address.DoesNotExist:
         # Handle the case where no addresses are found for the customer
@@ -223,8 +294,6 @@ class AdminNotificationViewSet(viewsets.ModelViewSet):
         return Response({'success': 'Notifications created successfully'}, status=status.HTTP_201_CREATED)
 
 
-
-
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -251,12 +320,11 @@ def admin_notification(request):
         return Response({'error': 'No notifications'}, status=status.HTTP_404_NOT_FOUND)
 
 
-
 def initiate_khalti_payment(request, order):
-    if isinstance(order,Subscription):
-        purchase_id=f'SUB-{order.id}'
+    if isinstance(order, Subscription):
+        purchase_id = f'SUB-{order.id}'
     else:
-        purchase_id=f'CO-{order.id}'
+        purchase_id = f'CO-{order.id}'
 
     # Here you would call the Khalti API to initiate the payment
     url = 'https://a.khalti.com/api/v2/epayment/initiate/'
@@ -304,7 +372,6 @@ def verifyKhalti(request):
         print(new_res)
 
         if new_res['status'] == 'Completed':
-
             pass
 
         return redirect('http://localhost:3000/payment-completion/')

@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.auth.models import User
+from django.db.models import Count
 from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -15,6 +16,8 @@ from .models import Plan, Meal, Subscription, WeeklyMenu, SubscriptionDeliveryDe
 from .serializers import PlanSerializer, MealSerializer, SubscriptionSerializer, WeeklyMenuSerializer, \
     SubscriptionDeliveryDetailsSerializer, AddOnSerializer, DeliveryListSerializer, SubscriptionListSerializer
 from customization.pagination import StandardResultsSetPagination
+from django.db.models import Count
+from django.db import models
 
 
 class PlanViewSet(viewsets.ModelViewSet):
@@ -319,3 +322,27 @@ class CustomerDeliveryListViewSet(APIView):
             status='COMPLETED').order_by('-id')
         serializer = DeliveryListSerializer(deliveries, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SubscriptionDashboardAPIView(APIView):
+    def get(self, request, format=None):
+        # Total number of subscriptions
+        total_subscriptions = Subscription.objects.count()
+
+        # Number of subscriptions in each status
+        subscription_status_counts = Subscription.objects.values('status').annotate(count=Count('id'))
+
+        # Total revenue
+        total_revenue = Subscription.objects.aggregate(total_revenue=models.Sum('total'))['total_revenue']
+
+        subscription_status_counts_dict = {}
+        for status_count in subscription_status_counts:
+            subscription_status_counts_dict[status_count['status']] = status_count['count']
+
+        # Response data
+        data = {
+            'total_subscriptions': total_subscriptions,
+            'subscription_status_counts': subscription_status_counts_dict,
+            'total_revenue': total_revenue}
+
+        return Response(data)
