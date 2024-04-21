@@ -1,16 +1,11 @@
-import random
-
-from django.contrib.auth.models import User
 from django.core.mail import send_mail
-
-from authentication.models import Customer
 from mamham_backend import settings
 
 
 def send_otp_via_mail(email, otp):
     subject = "Account verification email"
     message = f"Your OTP for account verification is: {otp}"
-    email_from = settings.EMAIL_HOST_USER  # Your email address
+    email_from = settings.EMAIL_HOST_USER
     recipient_list = [email]
 
     send_mail(subject, message, email_from, recipient_list)
@@ -19,7 +14,7 @@ def send_otp_via_mail(email, otp):
 def send_otp_forgot_password__mail(email, otp):
     subject = "Password Reset"
     message = f"Your OTP for account verification is: {otp}"
-    email_from = settings.EMAIL_HOST_USER  # Your email address
+    email_from = settings.EMAIL_HOST_USER
     recipient_list = [email]
 
     send_mail(subject, message, email_from, recipient_list)
@@ -28,7 +23,7 @@ def send_otp_forgot_password__mail(email, otp):
 def send_otp_admin_password__mail(otp):
     subject = "Password Reset"
     message = f"Your OTP for account verification is: {otp}"
-    email_from = settings.EMAIL_HOST_USER  # Your email address
+    email_from = settings.EMAIL_HOST_USER
     recipient_list = ['mamham.foods@gmail.com']
 
     send_mail(subject, message, email_from, recipient_list)

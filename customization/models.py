@@ -30,8 +30,7 @@ class CustomOrder(models.Model):
         verbose_name_plural = "Custom Orders"
 
     def __str__(self):
-        return str(self.id)  # Convert to string to return the order ID
-
+        return str(self.id)
 
 class Dish(models.Model):
     category_choices = (
@@ -46,6 +45,8 @@ class Dish(models.Model):
     image = models.ImageField(upload_to="dish_images", blank=True, null=True)
     description = models.TextField()
     category = models.CharField(max_length=20, choices=category_choices, default='Base')
+    isAvailable = models.BooleanField(default=True, null=True)
+
 
     class Meta:
         verbose_name = "Dish"

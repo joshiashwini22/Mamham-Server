@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 
-# Create your models here.
 class Customer(models.Model):
     user = models.OneToOneField(User, related_name="profile", on_delete=models.CASCADE)
     first_name = models.CharField(max_length=50)

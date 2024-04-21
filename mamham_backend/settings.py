@@ -170,6 +170,8 @@ KH_API_URL = 'https://khalti.com/api/v2/payment/verify/'
 KH_PUBLIC_KEY = 'your_khalti_public_key'
 KH_SECRET_KEY = 'your_khalti_secret_key'
 
+
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
