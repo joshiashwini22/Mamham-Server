@@ -38,7 +38,6 @@ class SubscriptionDeliveryDetailsSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    # delivery_details = SubscriptionDeliveryDetailsSerializer(many=True, required=False)
 
     class Meta:
         model = Subscription

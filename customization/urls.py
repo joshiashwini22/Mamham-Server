@@ -16,5 +16,6 @@ urlpatterns = [
     path('completed-orders/<int:customer_id>/<str:status_type>/', CompletedOrderByCustomer.as_view(), name='completed-orders'),
     path('ongoing-orders/<int:customer_id>/ongoing/', OngoingOrderByCustomer.as_view(), name='ongoing-orders'),
     path('dashboard/order', OrderDashboardAPIView.as_view(), name='dashboard-order'),
-
 ]
+
+

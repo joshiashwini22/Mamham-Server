@@ -254,7 +254,7 @@ class CompletedSubscriptionByCustomer(APIView):
         else:
             return Response({'error': 'Invalid status type'}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = SubscriptionSerializer(orders, many=True)
+        serializer = SubscriptionListSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -273,7 +273,7 @@ class OngoingSubscriptionByCustomer(APIView):
         ongoing_subscriptions = ongoing_subscriptions.exclude(status='COMPLETED')
 
         # Serialize the ongoing subscriptions
-        serializer = SubscriptionSerializer(ongoing_subscriptions, many=True)
+        serializer = SubscriptionListSerializer(ongoing_subscriptions, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 

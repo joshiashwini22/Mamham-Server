@@ -1,11 +1,10 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
-
 from . import views
-from authentication.views import CustomerViewSet, UserViewSet, AddressViewSet, initiate_khalti_payment, \
-    get_addresses_for_customer, verifyKhalti, NotificationViewSet, user_notifications, admin_notification, VerifyEmail, AdminNotificationViewSet
+from authentication.views import CustomerViewSet, UserViewSet, AddressViewSet, verifyKhalti, NotificationViewSet, \
+    user_notifications, admin_notification, AdminNotificationViewSet
 from rest_framework.routers import DefaultRouter
-app_name="authentication"
+app_name = "authentication"
 
 router = DefaultRouter()
 router.register(r'customers', CustomerViewSet, basename='customer')
@@ -29,6 +28,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('notification-user/', user_notifications, name='user-notifications'),
     path('notification-admin/', admin_notification, name='admin-notifications'),
-
 ]
 

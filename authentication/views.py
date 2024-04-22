@@ -15,7 +15,6 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
-# from rest_framework_simplejwt.tokens import RefreshToken
 
 from authentication.serializers import UserSerializer, CustomerSerializer, AddressSerializer, UserLoginSerializer, \
     NotificationSerializer
@@ -24,6 +23,7 @@ from django.contrib.auth import authenticate, logout
 from authentication.models import Customer, User, Address, Notification, AdminUser
 import requests
 
+from mamham_backend.settings import KH_SECRET_KEY
 from subscriptions.models import Subscription
 from .emails import *
 import random
@@ -326,7 +326,6 @@ def initiate_khalti_payment(request, order):
     else:
         purchase_id = f'CO-{order.id}'
 
-    # Here you would call the Khalti API to initiate the payment
     url = 'https://a.khalti.com/api/v2/epayment/initiate/'
     total_amount = float(order.total) * 100  # Multiply by 100 to convert to paisa
     return_url = request.build_absolute_uri(reverse('authentication:verify-payment'))
@@ -339,7 +338,7 @@ def initiate_khalti_payment(request, order):
     })
     print(payload)
     headers = {
-        'Authorization': 'Key 8b05a1003bea4fc189b0058548a25857',
+        'Authorization': KH_SECRET_KEY,
         'Content-Type': 'application/json',
     }
 
@@ -357,7 +356,7 @@ def verifyKhalti(request):
     url = "https://a.khalti.com/api/v2/epayment/lookup/"
     if request.method == 'GET':
         headers = {
-            'Authorization': 'key 8b05a1003bea4fc189b0058548a25857',
+            'Authorization': KH_SECRET_KEY,
             'Content-Type': 'application/json',
         }
         pidx = request.GET.get('pidx')

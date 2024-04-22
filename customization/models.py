@@ -32,6 +32,7 @@ class CustomOrder(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 class Dish(models.Model):
     category_choices = (
         ("Base", 'Base'),
@@ -66,7 +67,7 @@ class DishList(models.Model):
         verbose_name_plural = "Dish Lists"
 
     def __str__(self):
-        return str(self.order)  # Convert to string to return the order ID
+        return str(self.order)
 
 
 

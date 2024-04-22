@@ -61,11 +61,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 CORS_ALLOW_ALL_ORIGINS = True
-# CORS_ALLOW_CREDENTIALS = True
 
-# In your Django settings.py file
-
-CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization', 'Role']  # Add 'Role' to the list of allowed headers
+CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization', 'Role']
 
 ROOT_URLCONF = 'mamham_backend.urls'
 
@@ -160,6 +157,8 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True
 }
+
+
 # Actual directory user files go to
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -168,7 +167,7 @@ MEDIA_URL = '/media/'
 
 KH_API_URL = 'https://khalti.com/api/v2/payment/verify/'
 KH_PUBLIC_KEY = 'your_khalti_public_key'
-KH_SECRET_KEY = 'your_khalti_secret_key'
+KH_SECRET_KEY = 'Key 8b05a1003bea4fc189b0058548a25857'
 
 
 

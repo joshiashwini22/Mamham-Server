@@ -4,7 +4,6 @@ from subscriptions.views import PlanViewSet, WeeklyMenuViewSet, SubscriptionView
     CompletedSubscriptionByCustomer, SubscriptionListViewSet, DeliveryListViewSet, CustomerDeliveryListViewSet, \
     SubscriptionDashboardAPIView
 from rest_framework.routers import DefaultRouter
-from authentication.views import verifyKhalti
 
 router = DefaultRouter()
 router.register(r'plans', PlanViewSet, basename='plan')
@@ -26,5 +25,6 @@ urlpatterns = [
     path('customer-deliveries/<int:customer_id>/<int:subscription_id>/', CustomerDeliveryListViewSet.as_view(),
          name='customer-deliveries'),
     path('dashboard/subscriptionlist/', SubscriptionDashboardAPIView.as_view(), name='dashboard-subscription'),
-
 ]
+
+
