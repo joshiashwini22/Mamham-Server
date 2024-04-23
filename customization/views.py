@@ -1,9 +1,7 @@
 from django.contrib.auth.models import User
 from django.utils import timezone
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.utils import json
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -11,7 +9,6 @@ from authentication.models import Notification, Customer
 from .models import CustomOrder, DishList, Dish
 from customization.serializers import CustomOrderSerializer, DishListSerializer, DishSerializer, \
     CustomOrderDetailSerializer
-import requests
 from authentication.views import initiate_khalti_payment
 from customization.pagination import StandardResultsSetPagination
 from django.db import models
@@ -22,7 +19,7 @@ from django.db.models import Count
 class CustomOrderViewSet(viewsets.ModelViewSet):
     queryset = CustomOrder.objects.all()
     serializer_class = CustomOrderSerializer
-    # authentication_classes = [JWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     pagination_class = StandardResultsSetPagination
 
     def create(self, request, *args, **kwargs):
@@ -131,7 +128,7 @@ class DishListViewSet(viewsets.ModelViewSet):
 
 
 class DishViewSet(viewsets.ModelViewSet):
-    queryset = Dish.objects.all()
+    queryset = Dish.objects.all().order_by('-id')
     serializer_class = DishSerializer
 
 

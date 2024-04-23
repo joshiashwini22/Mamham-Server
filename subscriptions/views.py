@@ -1,10 +1,8 @@
 from datetime import timedelta
 
 from django.contrib.auth.models import User
-from django.db.models import Count
 from django.utils import timezone
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -21,15 +19,13 @@ from django.db import models
 
 
 class PlanViewSet(viewsets.ModelViewSet):
-    queryset = Plan.objects.all()
+    queryset = Plan.objects.all().order_by('-id')
     serializer_class = PlanSerializer
-    # permission_classes = [IsAdminUser]  # Only admin can view and modify plans
 
 
 class MealViewSet(viewsets.ModelViewSet):
-    queryset = Meal.objects.all()
+    queryset = Meal.objects.all().order_by('-id')
     serializer_class = MealSerializer
-    # permission_classes = [IsAdminUser]  # Only admin can view and modify meals
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
@@ -177,11 +173,23 @@ class WeeklyMenuViewSet(viewsets.ModelViewSet):
         if meals:
             queryset = queryset.filter(meals__id=meals)
 
+        queryset = queryset.order_by('-id')
+
         return queryset
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
+            # Check if a WeeklyMenu with the same week_start_date already exists
+            week_start_date = request.data.get("week_start_date")
+            plan_id = request.data.get("plan")  # Assuming plan is passed in the request
+
+            # Check for existing weekly menu with same start date and plan
+            if WeeklyMenu.objects.filter(week_start_date=week_start_date, plan_id=plan_id).exists():
+                return Response(
+                    {"detail": "A WeeklyMenu with this start date already exists."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             # Create the WeeklyMenu instance
             instance = serializer.save()
 
@@ -198,6 +206,32 @@ class WeeklyMenuViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, pk=None):
+        instance = self.get_object()  # Get the instance to be updated
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            instance = serializer.save()  # Save any general data updates
+
+            # Clear existing meal associations and add new ones
+            meal_ids = request.data.get("meals", [])
+            # Remove all existing meals
+            instance.meals.clear()
+
+            # Add new meals from the meal_ids list
+            for meal_id in meal_ids:
+                try:
+                    meal = Meal.objects.get(pk=meal_id)
+                    instance.meals.add(meal)
+                except Meal.DoesNotExist:
+                    pass
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 class SubscriptionDeliveryDetailsViewSet(viewsets.ModelViewSet):
@@ -235,7 +269,7 @@ class SubscriptionDeliveryDetailsViewSet(viewsets.ModelViewSet):
 
 
 class AddOnViewSet(viewsets.ModelViewSet):
-    queryset = AddOn.objects.all()
+    queryset = AddOn.objects.all().order_by('-id')
     serializer_class = AddOnSerializer
 
 
